@@ -1,0 +1,709 @@
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../models/game_model.dart';
+import '../models/user_profile.dart';
+import '../widgets/game_board.dart';
+import '../services/sound_service.dart';
+
+class GameScreen extends StatefulWidget {
+  final String? mode;
+  final String? difficulty;
+  
+  const GameScreen({super.key, this.mode, this.difficulty});
+
+  @override
+  State<GameScreen> createState() => _GameScreenState();
+}
+
+class _GameScreenState extends State<GameScreen> {
+  late GameModel game;
+  Color? customBoardColor;
+  Color? customPlayer1Color;
+  Color? customPlayer2Color;
+
+  @override
+  void initState() {
+    super.initState();
+    game = GameModel();
+    game.reset(); // Initialize history
+    
+    // Configure game based on mode and difficulty
+    if (widget.mode == 'ai' && widget.difficulty != null) {
+      game.aiEnabled = true;
+    } else if (widget.mode == 'online') {
+      // Configure for online play
+    }
+    // 'local' mode uses default settings
+  }
+
+  void handlePositionTap(int posId) {
+    // Don't allow input during AI's turn
+    if (game.aiEnabled && game.currentPlayer == game.aiPlayer) {
+      return;
+    }
+
+    setState(() {
+      if (game.phase == 'placing') {
+        bool millFormed = game.placePiece(posId);
+        SoundService.playPlacePiece();
+        if (millFormed) {
+          SoundService.playMill();
+          // Player must remove an opponent's piece - don't trigger AI yet
+        } else if (!game.checkWinCondition()) {
+          // Turn automatically switched in placePiece() - trigger AI if needed
+          _makeAIMoveIfNeeded();
+        }
+      } else if (game.phase == 'moving') {
+        if (game.selectedPosition == null) {
+          // First click: Select a piece to move
+          if (game.board[posId] == game.currentPlayer) {
+            game.selectedPosition = posId;
+            SoundService.playClick();
+          }
+        } else {
+          // Second click: Move the piece or deselect
+          if (posId == game.selectedPosition) {
+            // Clicking same position deselects
+            game.selectedPosition = null;
+            SoundService.playClick();
+          } else if (game.board[posId] == game.currentPlayer) {
+            // Clicking on another own piece, select it instead
+            game.selectedPosition = posId;
+            SoundService.playClick();
+          } else if (game.board[posId] == null) {
+            // Only try to move if target position is empty
+            List<int> validMoves = game.getValidMoves(game.selectedPosition!);
+            
+            if (validMoves.contains(posId)) {
+              // This is a valid move
+              bool millFormed = game.movePiece(game.selectedPosition!, posId);
+              SoundService.playMovePiece();
+              game.selectedPosition = null;
+              
+              if (millFormed) {
+                SoundService.playMill();
+                // Player must remove an opponent's piece - don't trigger AI yet
+              } else if (!game.checkWinCondition()) {
+                // Turn automatically switched in movePiece() - trigger AI if needed
+                _makeAIMoveIfNeeded();
+              }
+            } else {
+              // Invalid move - must move to adjacent position or use flying rules
+              game.selectedPosition = null;
+              SoundService.playClick();
+            }
+          } else {
+            // Clicked on opponent's piece - deselect
+            game.selectedPosition = null;
+            SoundService.playClick();
+          }
+        }
+      } else if (game.phase == 'removing') {
+        bool removed = game.removePiece(posId);
+        if (removed) {
+          SoundService.playRemovePiece();
+          if (!game.checkWinCondition()) {
+            // Turn automatically switched in removePiece() - trigger AI if needed
+            _makeAIMoveIfNeeded();
+          }
+        }
+      }
+      
+      // Check for win
+      if (game.checkWinCondition()) {
+        SoundService.playWin();
+        _showWinDialog();
+      }
+    });
+  }
+
+  void _makeAIMoveIfNeeded() {
+    if (game.aiEnabled && game.currentPlayer == game.aiPlayer) {
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (mounted) {
+          setState(() {
+            game.makeAIMove();
+            
+            // If AI formed a mill during placement/moving, it needs to remove a piece
+            // The phase will be 'removing' and currentPlayer will still be the AI
+            if (game.phase == 'removing' && game.currentPlayer == game.aiPlayer) {
+              Future.delayed(const Duration(milliseconds: 500), () {
+                if (mounted) {
+                  setState(() {
+                    game.makeAIMove(); // AI removes opponent's piece
+                    // removePiece() already switches player, don't switch again
+                    // Just check for win condition
+                    if (game.checkWinCondition()) {
+                      SoundService.playWin();
+                      _showWinDialog();
+                    }
+                  });
+                }
+              });
+            } else if (game.checkWinCondition()) {
+              // Check for win after AI's move
+              SoundService.playWin();
+              _showWinDialog();
+            }
+          });
+        }
+      });
+    }
+  }
+
+  void resetGame() {
+    setState(() {
+      game.reset();
+    });
+  }
+
+  void toggleAI() {
+    setState(() {
+      game.aiEnabled = !game.aiEnabled;
+      
+      if (game.aiEnabled && game.currentPlayer == game.aiPlayer) {
+        _makeAIMoveIfNeeded();
+      }
+    });
+  }
+
+  void _undo() {
+    if (game.canUndo()) {
+      setState(() {
+        game.undo();
+        SoundService.playClick();
+      });
+    }
+  }
+
+  void _redo() {
+    if (game.canRedo()) {
+      setState(() {
+        game.redo();
+        SoundService.playClick();
+      });
+    }
+  }
+
+  void _showSurrenderDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Dorëzohesh?'),
+        content: Text('Lojtari ${game.currentPlayer == 1 ? 2 : 1} do të fitojë!'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Anulo'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pop(context); // Return to home
+              SoundService.playLose();
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Dorëzohu'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showThemeDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        final profile = Provider.of<UserProfile>(context, listen: false);
+        return AlertDialog(
+          title: const Text('🎨 Zgjedh Temën'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _themeOption(
+                  '✨ Klasike (Ari)', 
+                  const Color(0xFFDAA520), // Gold
+                  Colors.white, 
+                  Colors.black,
+                  '3D golden board with classic colors',
+                ),
+                const Divider(),
+                _themeOption(
+                  '🌙 E Errët', 
+                  Colors.grey.shade800, 
+                  Colors.white, 
+                  const Color(0xFFFFD700), // Bright gold
+                  'Dark board with bright pieces',
+                ),
+                const Divider(),
+                _themeOption(
+                  '🌲 Natyrore', 
+                  const Color(0xFF8B4513), // Saddle brown
+                  Colors.white, 
+                  const Color(0xFF228B22), // Forest green
+                  'Natural wood colors',
+                ),
+                const Divider(),
+                _themeOption(
+                  '🌊 Oqean', 
+                  const Color(0xFF1E90FF), // Dodger blue
+                  Colors.white, 
+                  const Color(0xFF006994), // Darker blue
+                  'Ocean blue theme',
+                ),
+                const Divider(),
+                _themeOption(
+                  '� Ametist', 
+                  const Color(0xFF9966CC), // Amethyst
+                  Colors.white, 
+                  const Color(0xFF4B0082), // Indigo
+                  'Purple gem theme',
+                ),
+                const Divider(),
+                _themeOption(
+                  '🌸 Rozë', 
+                  const Color(0xFFFF1493), // Deep pink
+                  Colors.white, 
+                  const Color(0xFF9370DB), // Medium purple
+                  'Pink and purple theme',
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Mbyll'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _themeOption(String name, Color? board, Color? p1, Color? p2, String description) {
+    bool isSelected = customBoardColor == board;
+    return Container(
+      decoration: BoxDecoration(
+        color: isSelected ? Colors.blue.withOpacity(0.1) : null,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: ListTile(
+        title: Text(
+          name,
+          style: TextStyle(
+            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+          ),
+        ),
+        subtitle: Text(
+          description,
+          style: const TextStyle(fontSize: 11, color: Colors.grey),
+        ),
+        leading: Container(
+          width: 50,
+          height: 50,
+          decoration: BoxDecoration(
+            gradient: RadialGradient(
+              colors: [
+                board?.withOpacity(0.8) ?? const Color(0xFFD4A574),
+                board ?? const Color(0xFFD4A574),
+              ],
+            ),
+            border: Border.all(color: Colors.black, width: 2),
+            borderRadius: BorderRadius.circular(8),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.3),
+                blurRadius: 5,
+                offset: const Offset(2, 2),
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              Container(
+                width: 12,
+                height: 12,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: p1 ?? Colors.white,
+                  border: Border.all(color: Colors.black),
+                ),
+              ),
+              Container(
+                width: 12,
+                height: 12,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: p2 ?? Colors.black87,
+                  border: Border.all(color: Colors.black),
+                ),
+              ),
+            ],
+          ),
+        ),
+        trailing: isSelected ? const Icon(Icons.check, color: Colors.blue) : null,
+        onTap: () {
+          setState(() {
+            customBoardColor = board;
+            customPlayer1Color = p1;
+            customPlayer2Color = p2;
+          });
+          Navigator.pop(context);
+          SoundService.playClick();
+        },
+      ),
+    );
+  }
+
+  void _showWinDialog() {
+    // The winner is the OPPOSITE of current player, because when win condition is checked,
+    // current player is the one who cannot move (the loser)
+    final winner = game.currentPlayer == 1 ? 2 : 1;
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: Text('🎉 Lojtari $winner Fitoi!'),
+        content: const Text('Urime për fitoren!'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pop(context);
+            },
+            child: const Text('Kthehu'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context);
+              resetGame();
+            },
+            child: const Text('Lojë e Re'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void showRules() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text(
+            'Si të Luash Tokerrgjik',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: Color(0xFF667eea),
+            ),
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                _buildRuleSection(
+                  '🎯 Qëllimi',
+                  'Formo "rrathë" (3 figura në radhë) për të hequr figurat e kundërshtarit.',
+                ),
+                const SizedBox(height: 15),
+                _buildRuleSection(
+                  '📝 Fazat',
+                  '1. Vendos 9 figurat\n2. Lëviz figurat\n3. Fluturim me 3 figura',
+                ),
+                const SizedBox(height: 15),
+                _buildRuleSection(
+                  '🏆 Fitimi',
+                  'Zvogëlo kundërshtarin në 2 figura ose bllokoj lëvizjet.',
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Mbyll'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildRuleSection(String title, String content) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF764ba2),
+          ),
+        ),
+        const SizedBox(height: 5),
+        Text(
+          content,
+          style: const TextStyle(fontSize: 14, height: 1.5),
+        ),
+      ],
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text(
+          '🎮 Tokerrgjik',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
+        centerTitle: true,
+        backgroundColor: const Color(0xFF667eea),
+        foregroundColor: Colors.white,
+        elevation: 0,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.palette),
+            onPressed: _showThemeDialog,
+            tooltip: 'Ndrysho Temën',
+          ),
+          IconButton(
+            icon: const Icon(Icons.flag),
+            onPressed: _showSurrenderDialog,
+            tooltip: 'Dorëzohu',
+          ),
+        ],
+      ),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [
+              customBoardColor ?? const Color(0xFF667eea),
+              Colors.white,
+            ],
+            stops: const [0.0, 0.3],
+          ),
+        ),
+        child: SafeArea(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Column(
+                children: [
+                  // Player info
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: [
+                        _buildPlayerInfo(1),
+                        _buildPlayerInfo(2),
+                      ],
+                    ),
+                  ),
+
+              // Status message
+              Container(
+                margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF667eea), Color(0xFF764ba2)],
+                  ),
+                  borderRadius: BorderRadius.circular(15),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.deepPurple.withOpacity(0.3),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Text(
+                  game.getStatusMessage(),
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+
+              const SizedBox(height: 8),
+
+              // Game board - takes remaining space
+              Center(
+                child: AspectRatio(
+                  aspectRatio: 1,
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(
+                      maxWidth: 380,
+                      maxHeight: 380,
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: GameBoard(
+                        game: game,
+                        onPositionTap: handlePositionTap,
+                        boardColor: customBoardColor,
+                        player1Color: customPlayer1Color,
+                        player2Color: customPlayer2Color,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 8),
+
+              // Undo/Redo buttons
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    IconButton(
+                      onPressed: game.canUndo() ? _undo : null,
+                      icon: const Icon(Icons.undo),
+                      color: game.canUndo() ? const Color(0xFF667eea) : Colors.grey,
+                      iconSize: 32,
+                      tooltip: 'Zhbëj',
+                    ),
+                    const SizedBox(width: 24),
+                    IconButton(
+                      onPressed: game.canRedo() ? _redo : null,
+                      icon: const Icon(Icons.redo),
+                      color: game.canRedo() ? const Color(0xFF667eea) : Colors.grey,
+                      iconSize: 32,
+                      tooltip: 'Ribëj',
+                    ),
+                  ],
+                ),
+              ),
+
+              // Control buttons
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 6,
+                  alignment: WrapAlignment.center,
+                  children: [
+                    _buildSmallButton(
+                      icon: game.aiEnabled ? Icons.person : Icons.smart_toy,
+                      label: game.aiEnabled ? 'Njeri' : 'AI',
+                      onPressed: toggleAI,
+                      color: game.aiEnabled ? Colors.red : Colors.blue,
+                    ),
+                    _buildSmallButton(
+                      icon: Icons.refresh,
+                      label: 'E Re',
+                      onPressed: resetGame,
+                      color: const Color(0xFF667eea),
+                    ),
+                    _buildSmallButton(
+                      icon: Icons.menu_book,
+                      label: 'Rregullat',
+                      onPressed: showRules,
+                      color: Colors.orange,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 8),
+            ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSmallButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onPressed,
+    required Color color,
+  }) {
+    return ElevatedButton.icon(
+      onPressed: onPressed,
+      icon: Icon(icon, size: 20),
+      label: Text(label, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: color,
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        minimumSize: const Size(95, 40),
+      ),
+    );
+  }
+
+  Widget _buildPlayerInfo(int player) {
+    bool isActive = game.currentPlayer == player;
+    bool isAI = game.aiEnabled && player == game.aiPlayer;
+    int piecesCount = game.piecesLeft[player]! > 0
+        ? game.piecesLeft[player]!
+        : game.piecesOnBoard[player]!;
+
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: isActive ? Colors.white : Colors.white70,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: isActive
+            ? [
+                BoxShadow(
+                  color: Colors.deepPurple.withOpacity(0.3),
+                  blurRadius: 8,
+                  spreadRadius: 2,
+                ),
+              ]
+            : null,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 28,
+            height: 28,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: player == 1 
+                  ? (customPlayer1Color ?? Colors.white) 
+                  : (customPlayer2Color ?? Colors.black87),
+              border: Border.all(color: Colors.black87, width: 2),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'P$player ${isAI ? '🤖' : ''}',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                  color: isActive ? const Color(0xFF667eea) : Colors.grey,
+                ),
+              ),
+              Text(
+                'Figura: $piecesCount',
+                style: const TextStyle(fontSize: 12, color: Colors.black87),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}

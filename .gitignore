@@ -1,0 +1,33 @@
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+
+# Flutter/Dart
+tokerrgjik_mobile/.dart_tool/
+tokerrgjik_mobile/.packages
+tokerrgjik_mobile/build/
+tokerrgjik_mobile/.flutter-plugins
+tokerrgjik_mobile/.flutter-plugins-dependencies
+tokerrgjik_mobile/.pub-cache/
+tokerrgjik_mobile/.pub/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.temp

@@ -1,0 +1,28 @@
+{
+  // Java Configuration for Spark
+  "java.configuration.runtimes": [
+    {
+      "name": "JavaSE-17",
+      "path": "C:\\Program Files\\Eclipse Adoptium\\jdk-17.0.13.11-hotspot",
+      "default": true
+    }
+  ],
+  "java.jdt.ls.java.home": "C:\\Program Files\\Eclipse Adoptium\\jdk-17.0.13.11-hotspot",
+  
+  // Spark Configuration
+  "terminal.integrated.env.windows": {
+    "JAVA_HOME": "C:\\Program Files\\Eclipse Adoptium\\jdk-17.0.13.11-hotspot",
+    "PATH": "${env:JAVA_HOME}\\bin;${env:PATH}"
+  },
+  
+  // Flutter Configuration
+  "dart.flutterSdkPath": "C:\\flutter",
+  
+  // Project specific settings
+  "files.exclude": {
+    "**/node_modules": true,
+    "**/build": true,
+    "**/.dart_tool": true
+},
+"cmake.sourceDirectory": "C:/Users/shaban.ejupi/Desktop/PunaFK/KompjutimiCloudUshtrime/tokerrgjik_mobile/linux"
+}

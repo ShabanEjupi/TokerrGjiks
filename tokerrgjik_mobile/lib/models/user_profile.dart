@@ -1,0 +1,307 @@
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
+
+class UserProfile extends ChangeNotifier {
+  String _username = 'Player';
+  int _coins = 100; // Starting coins
+  int _totalWins = 0;
+  int _totalLosses = 0;
+  int _totalDraws = 0;
+  int _winStreak = 0;
+  int _bestStreak = 0;
+  bool _isPro = false;
+  DateTime? _lastLoginDate;
+  int _consecutiveLogins = 0;
+  
+  // Customization
+  String _boardTheme = 'classic'; // classic, modern, dark, custom
+  Color _player1Color = Colors.red;
+  Color _player2Color = Colors.blue;
+  Color _boardColor = const Color(0xFFD4A574); // Yellow/tan board
+  
+  // Settings
+  bool _soundEnabled = true;
+  bool _musicEnabled = true;
+  bool _vibrateEnabled = true;
+  String _difficulty = 'medium'; // easy, medium, hard, expert
+  
+  // Friends
+  List<String> _friends = [];
+  List<String> _friendRequests = [];
+  
+  // Getters
+  String get username => _username;
+  int get coins => _coins;
+  int get totalWins => _totalWins;
+  int get totalLosses => _totalLosses;
+  int get totalDraws => _totalDraws;
+  int get winStreak => _winStreak;
+  int get bestStreak => _bestStreak;
+  bool get isPro => _isPro;
+  DateTime? get lastLoginDate => _lastLoginDate;
+  int get consecutiveLogins => _consecutiveLogins;
+  
+  String get boardTheme => _boardTheme;
+  Color get player1Color => _player1Color;
+  Color get player2Color => _player2Color;
+  Color get boardColor => _boardColor;
+  
+  bool get soundEnabled => _soundEnabled;
+  bool get musicEnabled => _musicEnabled;
+  bool get vibrateEnabled => _vibrateEnabled;
+  String get difficulty => _difficulty;
+  
+  List<String> get friends => _friends;
+  List<String> get friendRequests => _friendRequests;
+  
+  int get totalGames => _totalWins + _totalLosses + _totalDraws;
+  double get winRate => totalGames > 0 ? (_totalWins / totalGames * 100) : 0;
+  
+  // Load from storage
+  Future<void> loadProfile() async {
+    final prefs = await SharedPreferences.getInstance();
+    _username = prefs.getString('username') ?? 'Player';
+    _coins = prefs.getInt('coins') ?? 100;
+    _totalWins = prefs.getInt('totalWins') ?? 0;
+    _totalLosses = prefs.getInt('totalLosses') ?? 0;
+    _totalDraws = prefs.getInt('totalDraws') ?? 0;
+    _winStreak = prefs.getInt('winStreak') ?? 0;
+    _bestStreak = prefs.getInt('bestStreak') ?? 0;
+    _isPro = prefs.getBool('isPro') ?? false;
+    
+    final lastLogin = prefs.getString('lastLoginDate');
+    if (lastLogin != null) {
+      _lastLoginDate = DateTime.parse(lastLogin);
+    }
+    _consecutiveLogins = prefs.getInt('consecutiveLogins') ?? 0;
+    
+    _boardTheme = prefs.getString('boardTheme') ?? 'classic';
+    _player1Color = Color(prefs.getInt('player1Color') ?? Colors.red.value);
+    _player2Color = Color(prefs.getInt('player2Color') ?? Colors.blue.value);
+    _boardColor = Color(prefs.getInt('boardColor') ?? const Color(0xFFD4A574).value);
+    
+    _soundEnabled = prefs.getBool('soundEnabled') ?? true;
+    _musicEnabled = prefs.getBool('musicEnabled') ?? true;
+    _vibrateEnabled = prefs.getBool('vibrateEnabled') ?? true;
+    _difficulty = prefs.getString('difficulty') ?? 'medium';
+    
+    final friendsJson = prefs.getString('friends');
+    if (friendsJson != null) {
+      _friends = List<String>.from(json.decode(friendsJson));
+    }
+    
+    final requestsJson = prefs.getString('friendRequests');
+    if (requestsJson != null) {
+      _friendRequests = List<String>.from(json.decode(requestsJson));
+    }
+    
+    // Check daily login reward
+    await checkDailyLogin();
+    
+    notifyListeners();
+  }
+  
+  // Save to storage
+  Future<void> saveProfile() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('username', _username);
+    await prefs.setInt('coins', _coins);
+    await prefs.setInt('totalWins', _totalWins);
+    await prefs.setInt('totalLosses', _totalLosses);
+    await prefs.setInt('totalDraws', _totalDraws);
+    await prefs.setInt('winStreak', _winStreak);
+    await prefs.setInt('bestStreak', _bestStreak);
+    await prefs.setBool('isPro', _isPro);
+    
+    if (_lastLoginDate != null) {
+      await prefs.setString('lastLoginDate', _lastLoginDate!.toIso8601String());
+    }
+    await prefs.setInt('consecutiveLogins', _consecutiveLogins);
+    
+    await prefs.setString('boardTheme', _boardTheme);
+    await prefs.setInt('player1Color', _player1Color.value);
+    await prefs.setInt('player2Color', _player2Color.value);
+    await prefs.setInt('boardColor', _boardColor.value);
+    
+    await prefs.setBool('soundEnabled', _soundEnabled);
+    await prefs.setBool('musicEnabled', _musicEnabled);
+    await prefs.setBool('vibrateEnabled', _vibrateEnabled);
+    await prefs.setString('difficulty', _difficulty);
+    
+    await prefs.setString('friends', json.encode(_friends));
+    await prefs.setString('friendRequests', json.encode(_friendRequests));
+  }
+  
+  // Check daily login
+  Future<void> checkDailyLogin() async {
+    final now = DateTime.now();
+    if (_lastLoginDate == null || 
+        !_isSameDay(_lastLoginDate!, now)) {
+      
+      // Check if consecutive
+      if (_lastLoginDate != null && 
+          _isConsecutiveDay(_lastLoginDate!, now)) {
+        _consecutiveLogins++;
+      } else if (_lastLoginDate == null || 
+                 !_isConsecutiveDay(_lastLoginDate!, now)) {
+        _consecutiveLogins = 1;
+      }
+      
+      _lastLoginDate = now;
+      
+      // Award daily login bonus
+      int bonus = 2; // Base 2 coins
+      if (_consecutiveLogins >= 7) bonus = 10;
+      else if (_consecutiveLogins >= 3) bonus = 5;
+      
+      addCoins(bonus);
+      await saveProfile();
+      
+      return; // Return bonus amount for display
+    }
+  }
+  
+  bool _isSameDay(DateTime a, DateTime b) {
+    return a.year == b.year && a.month == b.month && a.day == b.day;
+  }
+  
+  bool _isConsecutiveDay(DateTime last, DateTime now) {
+    final difference = now.difference(last).inDays;
+    return difference == 1;
+  }
+  
+  // Game results
+  void recordWin() {
+    _totalWins++;
+    _winStreak++;
+    if (_winStreak > _bestStreak) {
+      _bestStreak = _winStreak;
+    }
+    
+    // Award coins based on difficulty
+    int reward = 5;
+    switch (_difficulty) {
+      case 'easy':
+        reward = 3;
+        break;
+      case 'medium':
+        reward = 5;
+        break;
+      case 'hard':
+        reward = 8;
+        break;
+      case 'expert':
+        reward = 12;
+        break;
+    }
+    
+    // Bonus for win streak
+    if (_winStreak >= 3) reward += 2;
+    if (_winStreak >= 5) reward += 5;
+    
+    addCoins(reward);
+    saveProfile();
+    notifyListeners();
+  }
+  
+  void recordLoss() {
+    _totalLosses++;
+    _winStreak = 0;
+    addCoins(1); // Consolation coin
+    saveProfile();
+    notifyListeners();
+  }
+  
+  void recordDraw() {
+    _totalDraws++;
+    _winStreak = 0;
+    addCoins(2);
+    saveProfile();
+    notifyListeners();
+  }
+  
+  // Coins
+  void addCoins(int amount) {
+    _coins += amount;
+    notifyListeners();
+  }
+  
+  bool spendCoins(int amount) {
+    if (_coins >= amount) {
+      _coins -= amount;
+      saveProfile();
+      notifyListeners();
+      return true;
+    }
+    return false;
+  }
+  
+  // Pro upgrade
+  void upgradeToPro() {
+    _isPro = true;
+    saveProfile();
+    notifyListeners();
+  }
+  
+  // Settings
+  void updateSettings({
+    bool? sound,
+    bool? music,
+    bool? vibrate,
+    String? difficulty,
+  }) {
+    if (sound != null) _soundEnabled = sound;
+    if (music != null) _musicEnabled = music;
+    if (vibrate != null) _vibrateEnabled = vibrate;
+    if (difficulty != null) _difficulty = difficulty;
+    saveProfile();
+    notifyListeners();
+  }
+  
+  // Customization
+  void updateTheme({
+    String? theme,
+    Color? player1,
+    Color? player2,
+    Color? board,
+  }) {
+    if (theme != null) _boardTheme = theme;
+    if (player1 != null) _player1Color = player1;
+    if (player2 != null) _player2Color = player2;
+    if (board != null) _boardColor = board;
+    saveProfile();
+    notifyListeners();
+  }
+  
+  // Friends
+  void addFriend(String username) {
+    if (!_friends.contains(username)) {
+      _friends.add(username);
+      saveProfile();
+      notifyListeners();
+    }
+  }
+  
+  void removeFriend(String username) {
+    _friends.remove(username);
+    saveProfile();
+    notifyListeners();
+  }
+  
+  void sendFriendRequest(String username) {
+    // This would send to server in real implementation
+    notifyListeners();
+  }
+  
+  void acceptFriendRequest(String username) {
+    _friendRequests.remove(username);
+    addFriend(username);
+  }
+  
+  void declineFriendRequest(String username) {
+    _friendRequests.remove(username);
+    saveProfile();
+    notifyListeners();
+  }
+}
