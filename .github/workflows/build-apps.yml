@@ -143,7 +143,7 @@ jobs:
       
       - name: Build Web
         working-directory: tokerrgjik_mobile
-        run: flutter build web --release
+        run: flutter build web --release --web-renderer canvaskit --no-tree-shake-icons
       
       - name: Upload Web artifacts
         uses: actions/upload-artifact@v4
