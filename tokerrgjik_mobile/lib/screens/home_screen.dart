@@ -240,7 +240,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           SizedBox(height: 10),
           Text(
-            'Lojë Tradicionale Strategjike',
+            'Lojë tradicionale strategjike',
             style: TextStyle(
               fontSize: 18,
               color: Colors.white70,
@@ -279,7 +279,7 @@ class _HomeScreenState extends State<HomeScreen> {
         const SizedBox(height: 16),
         _buildMenuButton(
           icon: Icons.wifi,
-          label: 'Luaj Online',
+          label: 'Luaj online',
           gradient: const LinearGradient(
             colors: [Colors.orange, Colors.deepOrange],
           ),
@@ -323,12 +323,12 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Column(
         children: const [
           Text(
-            'Krijuar për',
+            'Zhvilluar nga',
             style: TextStyle(color: Colors.white60, fontSize: 14),
           ),
           SizedBox(height: 5),
           Text(
-            'Universiteti i Prishtinës',
+            'AlbaCode Solutions',
             style: TextStyle(
               color: Colors.white,
               fontSize: 16,
@@ -337,7 +337,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           SizedBox(height: 5),
           Text(
-            'Kompjutimi Cloud - 2025',
+            'Loja Tradicionale Shqiptare - 2025',
             style: TextStyle(color: Colors.white60, fontSize: 14),
           ),
         ],

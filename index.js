@@ -307,16 +307,16 @@ app.get('/about', (req, res) => {
     </head>
     <body>
       <div class="container">
-        <h1></h1>
-        <h2>Kompjutimi Cloud</h2>
+        <h1>AlbaCode Solutions</h1>
+        <h2>Tokerrgjik - Loja Tradicionale Shqiptare</h2>
         
         <div class="content">
-          <div class="item">Algoritme të avancuara</div>
-          <div class="item">Shkruaj një model MM</div>
+          <div class="item">Algoritme të avancuara AI</div>
+          <div class="item">Multiplayer & Cloud Gaming</div>
         </div>
         
         <div class="footer">
-          <p>Funksionon në Docker 🐳 | Node.js + Express</p>
+          <p>Funksionon në Docker 🐳 | Node.js + Express + Flutter</p>
           <p><a href="/">Shko tek Ballina</a> | <a href="/game">Luaj Tokerrgjik</a></p>
         </div>
       </div>

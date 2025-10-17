@@ -207,7 +207,7 @@ class SettingsScreen extends StatelessWidget {
                   ),
                   const ListTile(
                     title: Text('Zhvilluar nga'),
-                    subtitle: Text('Universiteti i Prishtinës'),
+                    subtitle: Text('AlbaCode Solutions'),
                   ),
                 ],
               ),

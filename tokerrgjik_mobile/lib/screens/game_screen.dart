@@ -17,9 +17,6 @@ class GameScreen extends StatefulWidget {
 
 class _GameScreenState extends State<GameScreen> {
   late GameModel game;
-  Color? customBoardColor;
-  Color? customPlayer1Color;
-  Color? customPlayer2Color;
 
   @override
   void initState() {
@@ -506,9 +503,11 @@ class _GameScreenState extends State<GameScreen> {
         elevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Icons.palette),
-            onPressed: _showThemeDialog,
-            tooltip: 'Ndrysho temën',
+            icon: const Icon(Icons.settings),
+            onPressed: () {
+              Navigator.pushNamed(context, '/settings');
+            },
+            tooltip: 'Cilësimet',
           ),
           IconButton(
             icon: const Icon(Icons.flag),
@@ -517,23 +516,25 @@ class _GameScreenState extends State<GameScreen> {
           ),
         ],
       ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              customBoardColor ?? const Color(0xFF667eea),
-              Colors.white,
-            ],
-            stops: const [0.0, 0.3],
-          ),
-        ),
-        child: SafeArea(
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: Column(
+      body: Consumer<UserProfile>(
+        builder: (context, profile, child) {
+          return Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  profile.boardColor,
+                  Colors.white,
+                ],
+                stops: const [0.0, 0.3],
+              ),
+            ),
+            child: SafeArea(
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 4),
+                  child: Column(
                 children: [
                   // Player info
                   Padding(
@@ -588,12 +589,16 @@ class _GameScreenState extends State<GameScreen> {
                     ),
                     child: Padding(
                       padding: const EdgeInsets.all(8.0),
-                      child: GameBoard(
-                        game: game,
-                        onPositionTap: handlePositionTap,
-                        boardColor: customBoardColor,
-                        player1Color: customPlayer1Color,
-                        player2Color: customPlayer2Color,
+                      child: Consumer<UserProfile>(
+                        builder: (context, profile, child) {
+                          return GameBoard(
+                            game: game,
+                            onPositionTap: handlePositionTap,
+                            boardColor: profile.boardColor,
+                            player1Color: profile.player1Color,
+                            player2Color: profile.player2Color,
+                          );
+                        },
                       ),
                     ),
                   ),
@@ -662,6 +667,8 @@ class _GameScreenState extends State<GameScreen> {
             ),
           ),
         ),
+          );
+        },
       ),
     );
   }
@@ -692,35 +699,35 @@ class _GameScreenState extends State<GameScreen> {
         ? game.piecesLeft[player]!
         : game.piecesOnBoard[player]!;
 
-    return Container(
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: isActive ? Colors.white : Colors.white70,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: isActive
-            ? [
-                BoxShadow(
-                  color: Colors.deepPurple.withOpacity(0.3),
-                  blurRadius: 8,
-                  spreadRadius: 2,
-                ),
-              ]
-            : null,
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 28,
-            height: 28,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: player == 1 
-                  ? (customPlayer1Color ?? const Color(0xFFFFF8DC)) // Cream color
-                  : (customPlayer2Color ?? Colors.black87),
-              border: Border.all(color: Colors.black87, width: 2),
-            ),
+    return Consumer<UserProfile>(
+      builder: (context, profile, child) {
+        return Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: isActive ? Colors.white : Colors.white70,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: isActive
+                ? [
+                    BoxShadow(
+                      color: Colors.deepPurple.withOpacity(0.3),
+                      blurRadius: 8,
+                      spreadRadius: 2,
+                    ),
+                  ]
+                : null,
           ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: player == 1 ? profile.player1Color : profile.player2Color,
+                  border: Border.all(color: Colors.black87, width: 2),
+                ),
+              ),
           const SizedBox(width: 8),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -742,6 +749,8 @@ class _GameScreenState extends State<GameScreen> {
           ),
         ],
       ),
+        );
+      },
     );
   }
 }
