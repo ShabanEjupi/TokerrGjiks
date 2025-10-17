@@ -1,0 +1,188 @@
+workflows:
+  # Android Build Workflow
+  android-workflow:
+    name: Android Build
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    environment:
+      flutter: stable
+      java: 17
+      groups:
+        - google_play # Add this group in Codemagic with GOOGLE_PLAY_JSON_KEY
+      vars:
+        PACKAGE_NAME: "com.tokerrgjiks.game"
+    scripts:
+      - name: Get Flutter packages
+        script: |
+          cd tokerrgjik_mobile
+          flutter pub get
+      - name: Flutter analyze
+        script: |
+          cd tokerrgjik_mobile
+          flutter analyze
+      - name: Flutter test
+        script: |
+          cd tokerrgjik_mobile
+          flutter test
+      - name: Build APK
+        script: |
+          cd tokerrgjik_mobile
+          flutter build apk --release
+      - name: Build App Bundle
+        script: |
+          cd tokerrgjik_mobile
+          flutter build appbundle --release
+    artifacts:
+      - tokerrgjik_mobile/build/app/outputs/flutter-apk/app-release.apk
+      - tokerrgjik_mobile/build/app/outputs/bundle/release/app-release.aab
+    publishing:
+      email:
+        recipients:
+          - your-email@example.com # Replace with your email
+        notify:
+          success: true
+          failure: true
+
+  # iOS Build Workflow
+  ios-workflow:
+    name: iOS Build
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    environment:
+      flutter: stable
+      xcode: 15.2
+      cocoapods: default
+      groups:
+        - app_store # Add this group in Codemagic with APP_STORE_CONNECT_KEY
+      vars:
+        BUNDLE_ID: "com.tokerrgjiks.game"
+    scripts:
+      - name: Get Flutter packages
+        script: |
+          cd tokerrgjik_mobile
+          flutter pub get
+      - name: Install CocoaPods dependencies
+        script: |
+          cd tokerrgjik_mobile/ios
+          pod install
+      - name: Flutter analyze
+        script: |
+          cd tokerrgjik_mobile
+          flutter analyze
+      - name: Flutter test
+        script: |
+          cd tokerrgjik_mobile
+          flutter test
+      - name: Build iOS (no code signing)
+        script: |
+          cd tokerrgjik_mobile
+          flutter build ios --release --no-codesign
+    artifacts:
+      - tokerrgjik_mobile/build/ios/iphoneos/*.app
+    publishing:
+      email:
+        recipients:
+          - your-email@example.com # Replace with your email
+        notify:
+          success: true
+          failure: true
+
+  # Web Build Workflow
+  web-workflow:
+    name: Web Build
+    max_build_duration: 30
+    instance_type: linux_x2
+    environment:
+      flutter: stable
+    scripts:
+      - name: Get Flutter packages
+        script: |
+          cd tokerrgjik_mobile
+          flutter pub get
+      - name: Flutter analyze
+        script: |
+          cd tokerrgjik_mobile
+          flutter analyze
+      - name: Flutter test
+        script: |
+          cd tokerrgjik_mobile
+          flutter test
+      - name: Build Web
+        script: |
+          cd tokerrgjik_mobile
+          flutter build web --release
+    artifacts:
+      - tokerrgjik_mobile/build/web/**
+    publishing:
+      email:
+        recipients:
+          - your-email@example.com # Replace with your email
+        notify:
+          success: true
+          failure: true
+
+  # Multi-platform workflow (all platforms)
+  all-platforms:
+    name: Build All Platforms
+    max_build_duration: 90
+    instance_type: mac_mini_m2
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: 'main'
+          include: true
+          source: true
+        - pattern: 'develop'
+          include: true
+          source: true
+    environment:
+      flutter: stable
+      xcode: 15.2
+      java: 17
+      cocoapods: default
+    scripts:
+      - name: Get Flutter packages
+        script: |
+          cd tokerrgjik_mobile
+          flutter pub get
+      - name: Run tests
+        script: |
+          cd tokerrgjik_mobile
+          flutter test
+      - name: Build Android APK
+        script: |
+          cd tokerrgjik_mobile
+          flutter build apk --release
+      - name: Build Android App Bundle
+        script: |
+          cd tokerrgjik_mobile
+          flutter build appbundle --release
+      - name: Build Web
+        script: |
+          cd tokerrgjik_mobile
+          flutter build web --release
+      - name: Build iOS (no codesign)
+        script: |
+          cd tokerrgjik_mobile/ios
+          pod install
+          cd ..
+          flutter build ios --release --no-codesign
+    artifacts:
+      - tokerrgjik_mobile/build/app/outputs/flutter-apk/app-release.apk
+      - tokerrgjik_mobile/build/app/outputs/bundle/release/app-release.aab
+      - tokerrgjik_mobile/build/web/**
+      - tokerrgjik_mobile/build/ios/iphoneos/*.app
+    publishing:
+      email:
+        recipients:
+          - your-email@example.com # Replace with your email
+        notify:
+          success: true
+          failure: true
+      slack:
+        channel: '#builds' # Optional: configure in Codemagic
+        notify_on_build_start: true
+        notify:
+          success: true
+          failure: true

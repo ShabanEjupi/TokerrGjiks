@@ -449,7 +449,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 const Icon(Icons.card_giftcard, size: 80, color: Colors.amber),
                 const SizedBox(height: 16),
                 const Text(
-                  '🎉 Bonus Ditor! 🎉',
+                  '🎉 Bonus ditor! 🎉',
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
@@ -510,13 +510,13 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Zgjedh Vështirësinë'),
+          title: const Text('Zgjedh vështirësinë'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              _difficultyOption('E Lehtë', 'easy', '3 🪙', profile),
+              _difficultyOption('E lehtë', 'easy', '3 🪙', profile),
               _difficultyOption('Mesatare', 'medium', '5 🪙', profile),
-              _difficultyOption('E Vështirë', 'hard', '8 🪙', profile),
+              _difficultyOption('E vështirë', 'hard', '8 🪙', profile),
               _difficultyOption('Ekspert', 'expert', '12 🪙', profile),
             ],
           ),
@@ -619,7 +619,7 @@ class _HomeScreenState extends State<HomeScreen> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text(
-            'Si të Luash Tokerrgjik',
+            'Si të luash Tokerrgjik',
             style: TextStyle(
               fontWeight: FontWeight.bold,
               color: Color(0xFF667eea),
@@ -636,7 +636,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(height: 15),
                 _buildRuleSection(
-                  '📝 Fazat e Lojës',
+                  '📝 Fazat e lojës',
                   '1. Vendosja: Vendos 9 figurat në pika boshe\n'
                       '2. Lëvizja: Lëviz figurat në pika boshe ngjitur\n'
                       '3. Fluturimi: Me 3 figura, mund të "fluturosh" kudo',

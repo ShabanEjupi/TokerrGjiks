@@ -376,6 +376,11 @@ class GameModel {
       if (board[i] == null) emptyPositions.add(i);
     }
 
+    if (emptyPositions.isEmpty) {
+      // No empty positions - this shouldn't happen but handle it
+      return;
+    }
+
     // 1. Try to complete a mill
     for (int pos in emptyPositions) {
       board[pos] = aiPlayer;
@@ -451,12 +456,24 @@ class GameModel {
       }
     }
 
-    // 3. Random move
-    int from = aiPieces[Random().nextInt(aiPieces.length)];
-    List<int> moves = getValidMoves(from);
-    if (moves.isNotEmpty) {
-      movePiece(from, moves[Random().nextInt(moves.length)]);
+    // 3. Random move - ensure we always have a fallback
+    if (aiPieces.isEmpty) {
+      // No pieces to move - this shouldn't happen but handle it
+      return;
     }
+    
+    // Try up to 10 times to find a valid move
+    for (int attempt = 0; attempt < 10; attempt++) {
+      int from = aiPieces[Random().nextInt(aiPieces.length)];
+      List<int> moves = getValidMoves(from);
+      if (moves.isNotEmpty) {
+        movePiece(from, moves[Random().nextInt(moves.length)]);
+        return;
+      }
+    }
+    
+    // If still no valid move found, AI has lost (no moves available)
+    // Don't make a move - let checkWinCondition handle it
   }
 
   void _aiRemovePiece() {

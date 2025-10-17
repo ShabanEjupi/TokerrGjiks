@@ -45,5 +45,19 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<!-- Google Mobile Ads App ID for iOS -->
+	<!-- IMPORTANT: Replace with your actual iOS AdMob App ID from Google AdMob Console -->
+	<!-- Get your App ID: https://apps.admob.com/ > Apps > View App ID -->
+	<!-- Test App ID shown below - REPLACE WITH YOUR OWN FOR PRODUCTION -->
+	<key>GADApplicationIdentifier</key>
+	<string>ca-app-pub-3940256099942544~1458002511</string>
+	<!-- SKAdNetwork identifiers for ad attribution -->
+	<key>SKAdNetworkItems</key>
+	<array>
+		<dict>
+			<key>SKAdNetworkIdentifier</key>
+			<string>cstr6suwn9.skadnetwork</string>
+		</dict>
+	</array>
 </dict>
 </plist>

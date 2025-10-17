@@ -21,10 +21,10 @@ class SettingsScreen extends StatelessWidget {
               // Sound Settings
               _buildSection(
                 context,
-                title: '🔊 Tinguj dhe Muzikë',
+                title: '🔊 Tinguj dhe muzikë',
                 children: [
                   SwitchListTile(
-                    title: const Text('Efektet e Zërit'),
+                    title: const Text('Efektet e zërit'),
                     subtitle: const Text('Tinguj për lëvizje dhe veprime'),
                     value: profile.soundEnabled,
                     onChanged: (value) {
@@ -34,7 +34,7 @@ class SettingsScreen extends StatelessWidget {
                     },
                   ),
                   SwitchListTile(
-                    title: const Text('Muzika e Sfondit'),
+                    title: const Text('Muzika e sfondit'),
                     subtitle: const Text('Muzikë gjatë lojës'),
                     value: profile.musicEnabled,
                     onChanged: (value) {
@@ -59,7 +59,7 @@ class SettingsScreen extends StatelessWidget {
                 title: '🎯 Vështirësia e AI',
                 children: [
                   RadioListTile<String>(
-                    title: const Text('E Lehtë'),
+                    title: const Text('E lehtë'),
                     subtitle: const Text('Perfekt për fillestarë - 3 monedha për fitore'),
                     value: 'easy',
                     groupValue: profile.difficulty,
@@ -79,7 +79,7 @@ class SettingsScreen extends StatelessWidget {
                     },
                   ),
                   RadioListTile<String>(
-                    title: const Text('E Vështirë'),
+                    title: const Text('E vështirë'),
                     subtitle: const Text('Për lojtarë të përvojshëm - 8 monedha për fitore'),
                     value: 'hard',
                     groupValue: profile.difficulty,
@@ -107,7 +107,7 @@ class SettingsScreen extends StatelessWidget {
                 title: '🎨 Pamja',
                 children: [
                   ListTile(
-                    title: const Text('Ngjyra e Lojtarit 1'),
+                    title: const Text('Ngjyra e lojtarit 1'),
                     trailing: Container(
                       width: 40,
                       height: 40,
@@ -124,7 +124,7 @@ class SettingsScreen extends StatelessWidget {
                     ),
                   ),
                   ListTile(
-                    title: const Text('Ngjyra e Lojtarit 2'),
+                    title: const Text('Ngjyra e lojtarit 2'),
                     trailing: Container(
                       width: 40,
                       height: 40,
@@ -158,7 +158,7 @@ class SettingsScreen extends StatelessWidget {
                     ),
                   ),
                   ListTile(
-                    title: const Text('Temë Paravendosur'),
+                    title: const Text('Temë paravendosur'),
                     subtitle: Text('Aktuale: ${_getThemeName(profile.boardTheme)}'),
                     trailing: const Icon(Icons.palette),
                     onTap: () => _showThemeSelector(context, profile),
@@ -172,7 +172,7 @@ class SettingsScreen extends StatelessWidget {
                 title: '👤 Llogaria',
                 children: [
                   ListTile(
-                    title: const Text('Emri i Lojtarit'),
+                    title: const Text('Emri i lojtarit'),
                     subtitle: Text(profile.username),
                     trailing: const Icon(Icons.edit),
                     onTap: () => _showUsernameDialog(context, profile),
@@ -296,7 +296,7 @@ class SettingsScreen extends StatelessWidget {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Zgjedh Temën'),
+          title: const Text('Zgjedh temën'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [

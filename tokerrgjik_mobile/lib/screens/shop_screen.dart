@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import '../models/user_profile.dart';
 import '../services/ad_service.dart';
 import '../services/sound_service.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 class ShopScreen extends StatefulWidget {
   const ShopScreen({super.key});
@@ -14,13 +13,12 @@ class ShopScreen extends StatefulWidget {
 
 class _ShopScreenState extends State<ShopScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  final AdService _adService = AdService();
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    _adService.loadRewardedAd();
+    AdService.loadRewardedAd();
   }
 
   @override
@@ -233,12 +231,12 @@ class _ShopScreenState extends State<ShopScreen> with SingleTickerProviderStateM
                     ),
                     const SizedBox(height: 24),
                     ElevatedButton.icon(
-                      onPressed: _adService.isRewardedAdReady
+                      onPressed: AdService.isRewardedAdReady
                           ? () => _watchAdForCoins(context, profile)
                           : null,
                       icon: const Icon(Icons.play_arrow, size: 28),
                       label: Text(
-                        _adService.isRewardedAdReady
+                        AdService.isRewardedAdReady
                             ? 'Shiko Reklamë'
                             : 'Duke u ngarkuar...',
                         style: const TextStyle(fontSize: 18),
@@ -626,18 +624,16 @@ class _ShopScreenState extends State<ShopScreen> with SingleTickerProviderStateM
   }
 
   void _watchAdForCoins(BuildContext context, UserProfile profile) {
-    _adService.showRewardedAd(
-      onRewarded: (coins) {
-        profile.addCoins(coins);
-        SoundService.playCoin();
-        
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('🎉 Morët $coins monedha!'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      },
-    );
+    AdService.showRewardedAd((coins) {
+      profile.addCoins(coins);
+      SoundService.playCoin();
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('🎉 Morët $coins monedha!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    });
   }
 }

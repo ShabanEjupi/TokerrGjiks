@@ -119,10 +119,29 @@ class _GameScreenState extends State<GameScreen> {
 
   void _makeAIMoveIfNeeded() {
     if (game.aiEnabled && game.currentPlayer == game.aiPlayer) {
+      // Add timeout protection - max 3 seconds for AI to make a move
       Future.delayed(const Duration(milliseconds: 500), () {
-        if (mounted) {
-          setState(() {
+        if (!mounted) return;
+        
+        // Set a timeout in case AI gets stuck
+        bool moveCompleted = false;
+        
+        Future.delayed(const Duration(seconds: 3), () {
+          if (!mounted || moveCompleted) return;
+          // Timeout - AI didn't move, force a random move or switch player
+          print('AI move timeout - forcing fallback');
+          if (mounted) {
+            setState(() {
+              // Force switch player if AI is stuck
+              game.switchPlayer();
+            });
+          }
+        });
+        
+        setState(() {
+          try {
             game.makeAIMove();
+            moveCompleted = true;
             
             // If AI formed a mill during placement/moving, it needs to remove a piece
             // The phase will be 'removing' and currentPlayer will still be the AI
@@ -145,8 +164,12 @@ class _GameScreenState extends State<GameScreen> {
               SoundService.playWin();
               _showWinDialog();
             }
-          });
-        }
+          } catch (e) {
+            // If AI move fails, switch to player
+            print('AI move error: $e');
+            game.switchPlayer();
+          }
+        });
       });
     }
   }
@@ -216,7 +239,7 @@ class _GameScreenState extends State<GameScreen> {
       builder: (context) {
         final profile = Provider.of<UserProfile>(context, listen: false);
         return AlertDialog(
-          title: const Text('🎨 Zgjedh Temën'),
+          title: const Text('🎨 Zgjedh temën'),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -359,15 +382,30 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   void _showWinDialog() {
-    // The winner is the OPPOSITE of current player, because when win condition is checked,
-    // current player is the one who cannot move (the loser)
-    final winner = game.currentPlayer == 1 ? 2 : 1;
+    // checkWinCondition() returns true when the OPPONENT of currentPlayer has lost
+    // This means currentPlayer is the WINNER (not the loser)
+    final winner = game.currentPlayer; // Current player is the winner!
+    
+    // Determine winner name based on game mode
+    String winnerName;
+    if (game.aiEnabled) {
+      // In AI mode: Player 1 is always the student, Player 2 is AI
+      if (winner == 1) {
+        winnerName = 'Ti Fitove!'; // Student won
+      } else {
+        winnerName = 'AI Fitoi!'; // AI won
+      }
+    } else {
+      // In local multiplayer mode
+      winnerName = 'Lojtari $winner Fitoi!';
+    }
+    
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: Text('🎉 Lojtari $winner Fitoi!'),
-        content: const Text('Urime për fitoren!'),
+        title: Text(game.aiEnabled && winner == 1 ? '🎉 $winnerName' : '🎮 $winnerName'),
+        content: Text(winner == 1 && game.aiEnabled ? 'Urime për fitoren!' : 'Provoje përsëri!'),
         actions: [
           TextButton(
             onPressed: () {
@@ -470,7 +508,7 @@ class _GameScreenState extends State<GameScreen> {
           IconButton(
             icon: const Icon(Icons.palette),
             onPressed: _showThemeDialog,
-            tooltip: 'Ndrysho Temën',
+            tooltip: 'Ndrysho temën',
           ),
           IconButton(
             icon: const Icon(Icons.flag),
@@ -678,7 +716,7 @@ class _GameScreenState extends State<GameScreen> {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: player == 1 
-                  ? (customPlayer1Color ?? Colors.white) 
+                  ? (customPlayer1Color ?? const Color(0xFFFFF8DC)) // Cream color
                   : (customPlayer2Color ?? Colors.black87),
               border: Border.all(color: Colors.black87, width: 2),
             ),

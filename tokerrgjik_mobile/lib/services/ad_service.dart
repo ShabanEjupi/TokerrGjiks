@@ -1,66 +1,222 @@
-import 'package:flutter/foundation.dart';
+import 'dart:io';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
+import '../config/api_keys.dart';
 
-/// Stub implementation of AdService
-/// This version does NOT require google_mobile_ads package or AdMob App ID
-/// 
-/// TO ENABLE REAL ADS:
-/// 1. Add google_mobile_ads to pubspec.yaml
-/// 2. Add your AdMob App ID to AndroidManifest.xml
-/// 3. Replace this stub with the real implementation
+/// AdService for displaying Google Mobile Ads
+/// Strategically placed to not interfere with gameplay
 class AdService {
-  bool _isRewardedAdReady = false;
+  static bool _isInitialized = false;
+  static BannerAd? _homeBannerAd;
+  static BannerAd? _gameOverBannerAd;
+  static InterstitialAd? _interstitialAd;
+  static RewardedAd? _rewardedAd;
+  static int _gameCount = 0;
 
-  /// Initialize the ad service (stub - does nothing)
+  /// Initialize the Google Mobile Ads SDK
   static Future<void> initialize() async {
-    if (kDebugMode) {
-      print('AdService: Stub implementation - no real ads will be shown');
+    if (!_isInitialized) {
+      await MobileAds.instance.initialize();
+      _isInitialized = true;
+      print('AdService: Google Mobile Ads initialized');
+      // Preload ads
+      loadInterstitialAd();
+      loadRewardedAd();
     }
   }
 
-  /// Load a rewarded ad (stub - simulates loading)
-  void loadRewardedAd() {
-    if (kDebugMode) {
-      print('AdService: Loading rewarded ad (stub)...');
+  /// Get Banner Ad Unit ID (platform-specific)
+  /// Uses API keys from configuration
+  static String get bannerAdUnitId {
+    if (Platform.isAndroid) {
+      return ApiKeys.admobBannerAndroid;
+    } else if (Platform.isIOS) {
+      return ApiKeys.admobBannerIos;
     }
-    // Simulate ad being ready after a delay
-    Future.delayed(const Duration(seconds: 1), () {
-      _isRewardedAdReady = true;
-      if (kDebugMode) {
-        print('AdService: Rewarded ad ready (stub)');
-      }
-    });
+    return '';
   }
 
-  /// Check if a rewarded ad is ready to show
-  bool get isRewardedAdReady => kDebugMode; // Always ready in debug mode
+  /// Get Interstitial Ad Unit ID
+  static String get interstitialAdUnitId {
+    if (Platform.isAndroid) {
+      return ApiKeys.admobInterstitialAndroid;
+    } else if (Platform.isIOS) {
+      return ApiKeys.admobInterstitialIos;
+    }
+    return '';
+  }
 
-  /// Show a rewarded ad (stub - gives test reward immediately)
-  void showRewardedAd({
-    required Function(int coins) onRewarded,
-  }) {
-    if (kDebugMode) {
-      print('AdService: Showing rewarded ad (stub)...');
-      // Give test reward immediately in debug mode
-      Future.delayed(const Duration(milliseconds: 500), () {
-        if (kDebugMode) {
-          print('AdService: Ad completed, giving test reward');
-        }
-        onRewarded(100); // Give 100 test coins
-        // Reload ad for next time
-        loadRewardedAd();
-      });
+  /// Get Rewarded Ad Unit ID
+  static String get rewardedAdUnitId {
+    if (Platform.isAndroid) {
+      return ApiKeys.admobRewardedAndroid;
+    } else if (Platform.isIOS) {
+      return ApiKeys.admobRewardedIos;
+    }
+    return '';
+  }
+
+  /// Create a banner ad for home screen (bottom placement)
+  static BannerAd? createHomeBannerAd() {
+    if (_homeBannerAd != null) {
+      return _homeBannerAd;
+    }
+
+    _homeBannerAd = BannerAd(
+      adUnitId: bannerAdUnitId,
+      size: AdSize.banner,
+      request: const AdRequest(),
+      listener: BannerAdListener(
+        onAdLoaded: (ad) {
+          print('Home Banner Ad loaded.');
+        },
+        onAdFailedToLoad: (ad, error) {
+          print('Home Banner Ad failed to load: $error');
+          ad.dispose();
+          _homeBannerAd = null;
+        },
+      ),
+    );
+
+    _homeBannerAd!.load();
+    return _homeBannerAd;
+  }
+
+  /// Create a banner ad for game over dialog
+  static BannerAd? createGameOverBannerAd() {
+    if (_gameOverBannerAd != null) {
+      return _gameOverBannerAd;
+    }
+
+    _gameOverBannerAd = BannerAd(
+      adUnitId: bannerAdUnitId,
+      size: AdSize.mediumRectangle,
+      request: const AdRequest(),
+      listener: BannerAdListener(
+        onAdLoaded: (ad) {
+          print('Game Over Banner Ad loaded.');
+        },
+        onAdFailedToLoad: (ad, error) {
+          print('Game Over Banner Ad failed to load: $error');
+          ad.dispose();
+          _gameOverBannerAd = null;
+        },
+      ),
+    );
+
+    _gameOverBannerAd!.load();
+    return _gameOverBannerAd;
+  }
+
+  /// Load interstitial ad (shown after every 3 games to avoid annoyance)
+  static void loadInterstitialAd() {
+    InterstitialAd.load(
+      adUnitId: interstitialAdUnitId,
+      request: const AdRequest(),
+      adLoadCallback: InterstitialAdLoadCallback(
+        onAdLoaded: (ad) {
+          _interstitialAd = ad;
+          print('Interstitial Ad loaded.');
+        },
+        onAdFailedToLoad: (error) {
+          print('Interstitial Ad failed to load: $error');
+          _interstitialAd = null;
+        },
+      ),
+    );
+  }
+
+  /// Show interstitial ad if game count threshold reached (every 3 games)
+  static void showInterstitialAdIfReady() {
+    _gameCount++;
+    if (_gameCount % 3 == 0 && _interstitialAd != null) {
+      _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
+        onAdDismissedFullScreenContent: (ad) {
+          ad.dispose();
+          _interstitialAd = null;
+          loadInterstitialAd(); // Preload next ad
+        },
+        onAdFailedToShowFullScreenContent: (ad, error) {
+          print('Interstitial Ad failed to show: $error');
+          ad.dispose();
+          _interstitialAd = null;
+          loadInterstitialAd();
+        },
+      );
+      _interstitialAd!.show();
+    } else if (_interstitialAd == null) {
+      loadInterstitialAd(); // Ensure ad is loading
+    }
+  }
+
+  /// Load rewarded ad for extra features
+  static void loadRewardedAd() {
+    RewardedAd.load(
+      adUnitId: rewardedAdUnitId,
+      request: const AdRequest(),
+      rewardedAdLoadCallback: RewardedAdLoadCallback(
+        onAdLoaded: (ad) {
+          _rewardedAd = ad;
+          print('Rewarded Ad loaded.');
+        },
+        onAdFailedToLoad: (error) {
+          print('Rewarded Ad failed to load: $error');
+          _rewardedAd = null;
+        },
+      ),
+    );
+  }
+
+  /// Show rewarded ad with callback (for earning coins, hints, etc.)
+  static void showRewardedAd(Function(int coins) onRewarded) {
+    if (_rewardedAd != null) {
+      _rewardedAd!.fullScreenContentCallback = FullScreenContentCallback(
+        onAdDismissedFullScreenContent: (ad) {
+          ad.dispose();
+          _rewardedAd = null;
+          loadRewardedAd(); // Preload next ad
+        },
+        onAdFailedToShowFullScreenContent: (ad, error) {
+          print('Rewarded Ad failed to show: $error');
+          ad.dispose();
+          _rewardedAd = null;
+          loadRewardedAd();
+        },
+      );
+      _rewardedAd!.show(
+        onUserEarnedReward: (ad, reward) {
+          print('User earned reward: ${reward.amount} ${reward.type}');
+          onRewarded(100); // Give 100 coins reward
+        },
+      );
     } else {
-      // In release mode, do nothing (no ads configured)
-      if (kDebugMode) {
-        print('AdService: Ads not available in release mode without configuration');
-      }
+      print('Rewarded Ad not ready yet.');
+      loadRewardedAd();
     }
   }
 
-  /// Dispose of resources (stub - does nothing)
-  void dispose() {
-    if (kDebugMode) {
-      print('AdService: Disposing (stub)');
-    }
+  /// Check if rewarded ad is ready
+  static bool get isRewardedAdReady => _rewardedAd != null;
+
+  /// Dispose banner ads
+  static void disposeHomeBannerAd() {
+    _homeBannerAd?.dispose();
+    _homeBannerAd = null;
+  }
+
+  static void disposeGameOverBannerAd() {
+    _gameOverBannerAd?.dispose();
+    _gameOverBannerAd = null;
+  }
+
+  /// Dispose all ads
+  static void disposeAll() {
+    _homeBannerAd?.dispose();
+    _gameOverBannerAd?.dispose();
+    _interstitialAd?.dispose();
+    _rewardedAd?.dispose();
+    _homeBannerAd = null;
+    _gameOverBannerAd = null;
+    _interstitialAd = null;
+    _rewardedAd = null;
   }
 }

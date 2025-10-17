@@ -1,0 +1,157 @@
+name: Flutter Build & Deploy
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  # Build Web Version
+  build-web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.35.6'
+          channel: 'stable'
+          
+      - name: Get dependencies
+        run: |
+          cd tokerrgjik_mobile
+          flutter pub get
+          
+      - name: Build Web
+        run: |
+          cd tokerrgjik_mobile
+          flutter build web --release
+          
+      - name: Upload Web Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: web-build
+          path: tokerrgjik_mobile/build/web/
+          retention-days: 7
+
+  # Build Android APK
+  build-android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+          
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.35.6'
+          channel: 'stable'
+          
+      - name: Get dependencies
+        run: |
+          cd tokerrgjik_mobile
+          flutter pub get
+          
+      - name: Build APK
+        run: |
+          cd tokerrgjik_mobile
+          flutter build apk --release
+          
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-apk
+          path: tokerrgjik_mobile/build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 7
+
+  # Build Android App Bundle (for Play Store)
+  build-android-bundle:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+          
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.35.6'
+          channel: 'stable'
+          
+      - name: Get dependencies
+        run: |
+          cd tokerrgjik_mobile
+          flutter pub get
+          
+      - name: Build App Bundle
+        run: |
+          cd tokerrgjik_mobile
+          flutter build appbundle --release
+          
+      - name: Upload App Bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-appbundle
+          path: tokerrgjik_mobile/build/app/outputs/bundle/release/app-release.aab
+          retention-days: 7
+
+  # Run Tests
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.35.6'
+          channel: 'stable'
+          
+      - name: Get dependencies
+        run: |
+          cd tokerrgjik_mobile
+          flutter pub get
+          
+      - name: Run tests
+        run: |
+          cd tokerrgjik_mobile
+          flutter test
+          
+      - name: Analyze code
+        run: |
+          cd tokerrgjik_mobile
+          flutter analyze
+
+  # Deploy to GitHub Pages (Web)
+  deploy-web:
+    needs: build-web
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Download Web Build
+        uses: actions/download-artifact@v4
+        with:
+          name: web-build
+          path: web-build
+          
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./web-build
+          publish_branch: gh-pages

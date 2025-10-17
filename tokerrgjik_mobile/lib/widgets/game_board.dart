@@ -130,9 +130,9 @@ class GameBoard extends StatelessWidget {
             height: pieceSize,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: piece != null
+                color: piece != null
                   ? (piece == 1 
-                      ? (player1Color ?? Colors.white) 
+                      ? (player1Color ?? const Color(0xFFFFF8DC)) // Cream color - visible on all themes
                       : (player2Color ?? Colors.black87))
                   : (isValidMove ? Colors.blue.withOpacity(0.3) : Colors.grey.shade300),
               border: Border.all(

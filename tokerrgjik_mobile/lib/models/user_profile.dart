@@ -3,6 +3,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
 class UserProfile extends ChangeNotifier {
+  // Default constructor
+  UserProfile();
+  
   String _username = 'Player';
   int _coins = 100; // Starting coins
   int _totalWins = 0;
@@ -303,5 +306,58 @@ class UserProfile extends ChangeNotifier {
     _friendRequests.remove(username);
     saveProfile();
     notifyListeners();
+  }
+  
+  // Serialization
+  Map<String, dynamic> toJson() {
+    return {
+      'username': _username,
+      'coins': _coins,
+      'totalWins': _totalWins,
+      'totalLosses': _totalLosses,
+      'totalDraws': _totalDraws,
+      'winStreak': _winStreak,
+      'bestStreak': _bestStreak,
+      'isPro': _isPro,
+      'lastLoginDate': _lastLoginDate?.toIso8601String(),
+      'consecutiveLogins': _consecutiveLogins,
+      'boardTheme': _boardTheme,
+      'player1Color': _player1Color.value,
+      'player2Color': _player2Color.value,
+      'boardColor': _boardColor.value,
+      'soundEnabled': _soundEnabled,
+      'musicEnabled': _musicEnabled,
+      'vibrateEnabled': _vibrateEnabled,
+      'difficulty': _difficulty,
+      'friends': _friends,
+      'friendRequests': _friendRequests,
+    };
+  }
+  
+  factory UserProfile.fromJson(Map<String, dynamic> json) {
+    final profile = UserProfile();
+    profile._username = json['username'] ?? 'Player';
+    profile._coins = json['coins'] ?? 100;
+    profile._totalWins = json['totalWins'] ?? 0;
+    profile._totalLosses = json['totalLosses'] ?? 0;
+    profile._totalDraws = json['totalDraws'] ?? 0;
+    profile._winStreak = json['winStreak'] ?? 0;
+    profile._bestStreak = json['bestStreak'] ?? 0;
+    profile._isPro = json['isPro'] ?? false;
+    profile._lastLoginDate = json['lastLoginDate'] != null 
+        ? DateTime.parse(json['lastLoginDate']) 
+        : null;
+    profile._consecutiveLogins = json['consecutiveLogins'] ?? 0;
+    profile._boardTheme = json['boardTheme'] ?? 'classic';
+    profile._player1Color = Color(json['player1Color'] ?? Colors.red.value);
+    profile._player2Color = Color(json['player2Color'] ?? Colors.blue.value);
+    profile._boardColor = Color(json['boardColor'] ?? const Color(0xFFD4A574).value);
+    profile._soundEnabled = json['soundEnabled'] ?? true;
+    profile._musicEnabled = json['musicEnabled'] ?? true;
+    profile._vibrateEnabled = json['vibrateEnabled'] ?? true;
+    profile._difficulty = json['difficulty'] ?? 'medium';
+    profile._friends = List<String>.from(json['friends'] ?? []);
+    profile._friendRequests = List<String>.from(json['friendRequests'] ?? []);
+    return profile;
   }
 }
