@@ -32,24 +32,24 @@ class SoundService {
       await _effectPlayer.setReleaseMode(ReleaseMode.stop);
       await _musicPlayer.setReleaseMode(ReleaseMode.loop);
       
-      // Set volume
-      await _effectPlayer.setVolume(0.7);
-      await _musicPlayer.setVolume(0.3);
+      // Set volume - LOUDER for better feedback
+      await _effectPlayer.setVolume(1.0);  // Max volume for effects
+      await _musicPlayer.setVolume(0.5);   // Moderate for background
       
-      // Preload one sound to test compatibility
-      try {
-        await _effectPlayer.setSource(AssetSource(_clickSound));
-      } catch (e) {
-        print('⚠️  Audio initialization test failed: $e');
-        // Try to continue anyway as some platforms initialize lazily
-      }
+      // Enable audio context for web browsers
+      await _effectPlayer.setPlayerMode(PlayerMode.lowLatency);
       
+      print('🔊 Sound system initialized successfully!');
       _initialized = true;
+      
+      // Auto-play click sound to activate audio on web
+      Future.delayed(Duration(milliseconds: 100), () {
+        playClick();
+      });
     } catch (e) {
-      print('Sound initialization error: $e');
-      // Gracefully disable sounds if initialization fails
-      _soundEnabled = false;
-      _musicEnabled = false;
+      print('⚠️  Sound initialization error: $e');
+      // Still mark as initialized to try playing sounds
+      _initialized = true;
     }
   }
   
@@ -70,14 +70,18 @@ class SoundService {
   }
   
   static Future<void> playSound(String sound) async {
-    if (!_soundEnabled || !_initialized) return;
+    if (!_initialized) return;
+    if (!_soundEnabled) {
+      print('🔇 Sounds disabled - enable in settings');
+      return;
+    }
     
     try {
       await _effectPlayer.stop();
       await _effectPlayer.play(AssetSource(sound));
+      print('🔊 Playing: $sound');
     } catch (e) {
-      // Silently fail if sound not found
-      print('Audio playback error: $e');
+      print('⚠️  Audio playback error for $sound: $e');
     }
   }
   
