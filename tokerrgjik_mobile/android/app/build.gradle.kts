@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.tokerrgjik_mobile"
+    namespace = "com.ejupishaban.tokerrgjik"
     compileSdk = 36  // Updated to support latest plugins
     ndkVersion = flutter.ndkVersion
 
@@ -20,14 +20,13 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
-        applicationId = "com.example.tokerrgjik_mobile"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = 24  // Updated from default to support modern features
-        targetSdk = 36  // Updated to match compileSdk
-        versionCode = flutter.versionCode
-        versionName = flutter.versionName
+        // Unique Application ID for Tokerrgjik
+        applicationId = "com.ejupishaban.tokerrgjik"
+        // Application configuration
+        minSdk = 24  // Android 7.0 and above
+        targetSdk = 36  // Latest Android
+        versionCode = 1
+        versionName = "1.0.0"
     }
 
     buildTypes {

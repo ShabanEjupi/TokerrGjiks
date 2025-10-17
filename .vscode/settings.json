@@ -24,5 +24,6 @@
     "**/build": true,
     "**/.dart_tool": true
 },
-"cmake.sourceDirectory": "C:/Users/shaban.ejupi/Desktop/PunaFK/KompjutimiCloudUshtrime/tokerrgjik_mobile/linux"
+"cmake.sourceDirectory": "C:/Users/shaban.ejupi/Desktop/PunaFK/KompjutimiCloudUshtrime/tokerrgjik_mobile/linux",
+"github.copilot.selectedCompletionModel": ""
 }

@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tokerrgjik-flutter
+  labels:
+    app: tokerrgjik
+    component: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: tokerrgjik
+      component: frontend
+  template:
+    metadata:
+      labels:
+        app: tokerrgjik
+        component: frontend
+    spec:
+      containers:
+      - name: flutter-web
+        image: ejupishaban/tokerrgjik-flutter:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+        env:
+        - name: BACKEND_URL
+          value: "http://tokerrgjik-backend-service:3000"
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tokerrgjik-flutter-service
+spec:
+  selector:
+    app: tokerrgjik
+    component: frontend
+  ports:
+  - protocol: TCP
+    port: 8080
+    targetPort: 8080
+    nodePort: 30080
+  type: NodePort

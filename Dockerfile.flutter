@@ -1,0 +1,66 @@
+# Flutter with Android SDK and Emulator
+FROM ubuntu:22.04
+
+# Prevent interactive prompts during installation
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    git \
+    unzip \
+    xz-utils \
+    zip \
+    libglu1-mesa \
+    openjdk-11-jdk \
+    wget \
+    qemu-kvm \
+    libvirt-daemon-system \
+    libvirt-clients \
+    bridge-utils \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set up environment variables
+ENV JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64
+ENV ANDROID_HOME=/opt/android-sdk
+ENV PATH=$PATH:$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator
+ENV FLUTTER_HOME=/opt/flutter
+ENV PATH=$PATH:$FLUTTER_HOME/bin
+
+# Install Flutter
+RUN git clone https://github.com/flutter/flutter.git -b stable --depth 1 $FLUTTER_HOME
+RUN flutter precache
+RUN flutter config --no-analytics
+RUN flutter config --enable-web
+
+# Install Android Command Line Tools
+RUN mkdir -p $ANDROID_HOME/cmdline-tools && \
+    cd $ANDROID_HOME/cmdline-tools && \
+    wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip && \
+    unzip commandlinetools-linux-9477386_latest.zip && \
+    rm commandlinetools-linux-9477386_latest.zip && \
+    mv cmdline-tools latest
+
+# Accept licenses and install Android SDK components
+RUN yes | sdkmanager --licenses || true
+RUN sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.0" \
+    "system-images;android-33;google_apis;x86_64" "emulator"
+
+# Create Android emulator
+RUN echo "no" | avdmanager create avd \
+    -n Tokerrgjik_Emulator \
+    -k "system-images;android-33;google_apis;x86_64" \
+    --device "pixel_5"
+
+WORKDIR /app
+
+# Copy Flutter project
+COPY tokerrgjik_mobile ./
+
+# Get Flutter dependencies
+RUN flutter pub get
+
+EXPOSE 8080
+
+# Default command runs on web, but can be overridden for emulator
+CMD ["flutter", "run", "-d", "web-server", "--web-port", "8080", "--web-hostname", "0.0.0.0"]
