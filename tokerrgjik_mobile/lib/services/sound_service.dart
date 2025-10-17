@@ -10,16 +10,16 @@ class SoundService {
   static bool _musicEnabled = true;
   static bool _initialized = false;
   
-  // Sound effects paths - using MP3 (the actual format in assets/)
-  static const String _placePieceSound = 'sounds/place.mp3';
-  static const String _movePieceSound = 'sounds/move.mp3';
-  static const String _removePieceSound = 'sounds/remove.mp3';
-  static const String _millSound = 'sounds/mill.mp3';
-  static const String _winSound = 'sounds/win.mp3';
-  static const String _loseSound = 'sounds/lose.mp3';
-  static const String _clickSound = 'sounds/click.mp3';
-  static const String _coinSound = 'sounds/coin.mp3';
-  static const String _backgroundMusic = 'sounds/background.mp3';
+  // Sound effects paths - using WAV for better cross-platform compatibility
+  static const String _placePieceSound = 'sounds/place.wav';
+  static const String _movePieceSound = 'sounds/move.wav';
+  static const String _removePieceSound = 'sounds/remove.wav';
+  static const String _millSound = 'sounds/mill.wav';
+  static const String _winSound = 'sounds/win.wav';
+  static const String _loseSound = 'sounds/lose.wav';
+  static const String _clickSound = 'sounds/click.wav';
+  static const String _coinSound = 'sounds/coin.wav';
+  static const String _backgroundMusic = 'sounds/background.wav';
   
   static void initialize({bool sound = true, bool music = true}) async {
     if (_initialized) return;
@@ -36,19 +36,12 @@ class SoundService {
       await _effectPlayer.setVolume(0.7);
       await _musicPlayer.setVolume(0.3);
       
-      // On Windows, audioplayers may have issues with MP3
-      // Try to preload one sound to test compatibility
-      if (Platform.isWindows) {
-        try {
-          // Test if audio works
-          await _effectPlayer.setSource(AssetSource(_clickSound));
-        } catch (e) {
-          print('⚠️  Audio may not work on Windows with MP3 files.');
-          print('   Consider converting to WAV format for better compatibility.');
-          // Disable sounds on Windows if they don't work
-          _soundEnabled = false;
-          _musicEnabled = false;
-        }
+      // Preload one sound to test compatibility
+      try {
+        await _effectPlayer.setSource(AssetSource(_clickSound));
+      } catch (e) {
+        print('⚠️  Audio initialization test failed: $e');
+        // Try to continue anyway as some platforms initialize lazily
       }
       
       _initialized = true;
@@ -83,8 +76,7 @@ class SoundService {
       await _effectPlayer.stop();
       await _effectPlayer.play(AssetSource(sound));
     } catch (e) {
-      // Silently fail if sound not found or unsupported format
-      // This prevents crashes on Windows where MP3 may not be fully supported
+      // Silently fail if sound not found
       print('Audio playback error: $e');
     }
   }

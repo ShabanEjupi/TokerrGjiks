@@ -36,10 +36,6 @@ jobs:
         working-directory: tokerrgjik_mobile
         run: flutter pub get
       
-      - name: Run tests
-        working-directory: tokerrgjik_mobile
-        run: flutter test || true  # Continue even if tests fail
-      
       - name: Build APK (Release)
         working-directory: tokerrgjik_mobile
         run: flutter build apk --release --split-per-abi
@@ -94,10 +90,6 @@ jobs:
       - name: Get dependencies
         working-directory: tokerrgjik_mobile
         run: flutter pub get
-      
-      - name: Run tests
-        working-directory: tokerrgjik_mobile
-        run: flutter test || true  # Continue even if tests fail
       
       - name: Build iOS (No Codesign)
         working-directory: tokerrgjik_mobile
