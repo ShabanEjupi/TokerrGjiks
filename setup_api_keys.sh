@@ -9,11 +9,21 @@ echo "=========================================="
 echo ""
 
 API_KEYS_FILE="tokerrgjik_mobile/lib/config/api_keys.dart"
+API_KEYS_TEMPLATE="tokerrgjik_mobile/lib/config/api_keys.dart.template"
 
-if [ ! -f "$API_KEYS_FILE" ]; then
-    echo "Error: api_keys.dart file not found!"
+# Check if we're in the right directory
+if [ ! -f "$API_KEYS_TEMPLATE" ]; then
+    echo "Error: Template file not found!"
     echo "Please run this script from the project root directory."
     exit 1
+fi
+
+# Create api_keys.dart from template if it doesn't exist
+if [ ! -f "$API_KEYS_FILE" ]; then
+    echo "Creating api_keys.dart from template..."
+    cp "$API_KEYS_TEMPLATE" "$API_KEYS_FILE"
+    echo "✓ api_keys.dart created"
+    echo ""
 fi
 
 echo "This script will help you set up the API keys needed for the app."
