@@ -1,357 +1,192 @@
-name: Build Android & iOS Appsname: Build Android & iOS Apps
-
-
-
-on:on:
-
-  push:  push:
-
-    branches: [ main ]    branches: [ main ]
-
-    tags:    tags:
-
-      - 'v*'      - 'v*'
-
-  pull_request:  pull_request:
-
-    branches: [ main ]    branches: [ main ]
-
-  workflow_dispatch:  # Allow manual trigger  workflow_dispatch:  # Allow manual trigger
-
-
-
-jobs:jobs:
-
-  build-android:  build-android:
-
-    name: Build Android APK/AAB    name: Build Android APK/AAB
-
-    runs-on: ubuntu-latest    runs-on: ubuntu-latest
-
-        
-
-    steps:    steps:
-
-      - name: Checkout repository      - name: Checkout repository
-
-        uses: actions/checkout@v4        uses: actions/checkout@v4
-
-            
-
-      - name: Setup Java      - name: Setup Java
-
-        uses: actions/setup-java@v4        uses: actions/setup-java@v4
-
-        with:        with:
-
-          distribution: 'temurin'          distribution: 'temurin'
-
-          java-version: '17'          java-version: '17'
-
-          cache: 'gradle'          cache: 'gradle'
-
-            
-
-      - name: Setup Flutter      - name: Setup Flutter
-
-        uses: subosito/flutter-action@v2        uses: subosito/flutter-action@v2
-
-        with:        with:
-
-          flutter-version: '3.35.6'          flutter-version: '3.35.6'
-
-          channel: 'stable'          channel: 'stable'
-
-          cache: true          cache: true
-
-            
-
-      - name: Verify API keys exist      - name: Verify API keys exist
-
-        run: |        env:
-
-          if [ ! -f "tokerrgjik_mobile/lib/config/api_keys.dart" ]; then        run: |
-
-            echo "Error: api_keys.dart not found!"          if [ ! -f "tokerrgjik_mobile/lib/config/api_keys.dart" ]; then
-
-            exit 1            echo "Error: api_keys.dart not found!"
-
-          fi            exit 1
-
-          echo "API keys file found ✓"          fi
-
-                echo "API keys file found ✓"
-
-      - name: Get dependencies      
-
-        working-directory: tokerrgjik_mobile      - name: Get dependencies
-
-        run: flutter pub get        working-directory: tokerrgjik_mobile
-
-              run: flutter pub get
-
-      - name: Build APK (Release)      
-
-        working-directory: tokerrgjik_mobile      - name: Build APK (Release)
-
-        run: flutter build apk --release --split-per-abi        working-directory: tokerrgjik_mobile
-
-              run: flutter build apk --release --split-per-abi
-
-      - name: Build App Bundle (Release)      
-
-        working-directory: tokerrgjik_mobile      - name: Build App Bundle (Release)
-
-        run: flutter build appbundle --release        working-directory: tokerrgjik_mobile
-
-              run: flutter build appbundle --release
-
-      - name: Upload APK artifacts      
-
-        uses: actions/upload-artifact@v4      - name: Upload APK artifacts
-
-        with:        uses: actions/upload-artifact@v4
-
-          name: android-apks        with:
-
-          path: |          name: android-apks
-
-            tokerrgjik_mobile/build/app/outputs/flutter-apk/*.apk          path: |
-
-          retention-days: 90            tokerrgjik_mobile/build/app/outputs/flutter-apk/*.apk
-
-                retention-days: 90
-
-      - name: Upload AAB artifacts      
-
-        uses: actions/upload-artifact@v4      - name: Upload AAB artifacts
-
-        with:        uses: actions/upload-artifact@v4
-
-          name: android-aab        with:
-
-          path: |          name: android-aab
-
-            tokerrgjik_mobile/build/app/outputs/bundle/release/*.aab          path: |
-
-          retention-days: 90            tokerrgjik_mobile/build/app/outputs/bundle/release/*.aab
-
-                retention-days: 90
-
-      - name: Create Release (if tag)      
-
-        if: startsWith(github.ref, 'refs/tags/v')      - name: Create Release (if tag)
-
-        uses: softprops/action-gh-release@v1        if: startsWith(github.ref, 'refs/tags/v')
-
-        with:        uses: softprops/action-gh-release@v1
-
-          files: |        with:
-
-            tokerrgjik_mobile/build/app/outputs/flutter-apk/*.apk          files: |
-
-            tokerrgjik_mobile/build/app/outputs/bundle/release/*.aab            tokerrgjik_mobile/build/app/outputs/flutter-apk/*.apk
-
-          draft: false            tokerrgjik_mobile/build/app/outputs/bundle/release/*.aab
-
-          prerelease: false          draft: false
-
-        env:          prerelease: false
-
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}        env:
-
+name: Build Android & iOS Apps
+
+on:
+  push:
+    branches: [ main ]
+    tags:
+      - 'v*'
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  build-android:
+    name: Build Android APK/AAB
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'gradle'
+      
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.35.6'
+          channel: 'stable'
+          cache: true
+      
+      - name: Generate API keys
+        env:
+          ADMOB_APP_ID_ANDROID: ${{ secrets.ADMOB_APP_ID_ANDROID }}
+          ADMOB_APP_ID_IOS: ${{ secrets.ADMOB_APP_ID_IOS }}
+          ADMOB_BANNER_ANDROID: ${{ secrets.ADMOB_BANNER_ANDROID }}
+          ADMOB_BANNER_IOS: ${{ secrets.ADMOB_BANNER_IOS }}
+          ADMOB_INTERSTITIAL_ANDROID: ${{ secrets.ADMOB_INTERSTITIAL_ANDROID }}
+          ADMOB_INTERSTITIAL_IOS: ${{ secrets.ADMOB_INTERSTITIAL_IOS }}
+          ADMOB_REWARDED_ANDROID: ${{ secrets.ADMOB_REWARDED_ANDROID }}
+          ADMOB_REWARDED_IOS: ${{ secrets.ADMOB_REWARDED_IOS }}
+        run: |
+          CI=true bash scripts/generate_api_keys.sh
+      
+      - name: Get dependencies
+        working-directory: tokerrgjik_mobile
+        run: flutter pub get
+      
+      - name: Build APK (Release)
+        working-directory: tokerrgjik_mobile
+        run: flutter build apk --release --split-per-abi
+      
+      - name: Build App Bundle (Release)
+        working-directory: tokerrgjik_mobile
+        run: flutter build appbundle --release
+      
+      - name: Upload APK artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-apks
+          path: |
+            tokerrgjik_mobile/build/app/outputs/flutter-apk/*.apk
+          retention-days: 90
+      
+      - name: Upload AAB artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-aab
+          path: |
+            tokerrgjik_mobile/build/app/outputs/bundle/release/*.aab
+          retention-days: 90
+      
+      - name: Create Release (if tag)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            tokerrgjik_mobile/build/app/outputs/flutter-apk/*.apk
+            tokerrgjik_mobile/build/app/outputs/bundle/release/*.aab
+          draft: false
+          prerelease: false
+        env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   build-ios:
-
-    name: Build iOS IPA  build-ios:
-
-    runs-on: macos-14  # macOS with Apple Silicon    name: Build iOS IPA
-
-        runs-on: macos-14  # macOS with Apple Silicon
-
-    steps:    
-
-      - name: Checkout repository    steps:
-
-        uses: actions/checkout@v4      - name: Checkout repository
-
-              uses: actions/checkout@v4
-
-      - name: Setup Flutter      
-
-        uses: subosito/flutter-action@v2      - name: Setup Flutter
-
-        with:        uses: subosito/flutter-action@v2
-
-          flutter-version: '3.35.6'        with:
-
-          channel: 'stable'          flutter-version: '3.35.6'
-
-          cache: true          channel: 'stable'
-
-                cache: true
-
-      - name: Verify API keys exist      
-
-        run: |      - name: Verify API keys exist
-
-          if [ ! -f "tokerrgjik_mobile/lib/config/api_keys.dart" ]; then        env:
-
-            echo "Error: api_keys.dart not found!"        run: |
-
-            exit 1          if [ ! -f "tokerrgjik_mobile/lib/config/api_keys.dart" ]; then
-
-          fi            echo "Error: api_keys.dart not found!"
-
-          echo "API keys file found ✓"            exit 1
-
-                fi
-
-      - name: Get dependencies          echo "API keys file found ✓"
-
-        working-directory: tokerrgjik_mobile      
-
-        run: flutter pub get      - name: Get dependencies
-
-              working-directory: tokerrgjik_mobile
-
-      - name: Build iOS (No Codesign)        run: flutter pub get
-
-        working-directory: tokerrgjik_mobile      
-
-        run: flutter build ios --release --no-codesign      - name: Build iOS (No Codesign)
-
-              working-directory: tokerrgjik_mobile
-
-      - name: Create IPA        run: flutter build ios --release --no-codesign
-
-        working-directory: tokerrgjik_mobile      
-
-        run: |      - name: Create IPA
-
-          mkdir -p build/ios/ipa        working-directory: tokerrgjik_mobile
-
-          cd build/ios/iphoneos        run: |
-
-          mkdir Payload          mkdir -p build/ios/ipa
-
-          cp -r Runner.app Payload/          cd build/ios/iphoneos
-
-          zip -r ../ipa/Tokerrgjik.ipa Payload/          mkdir Payload
-
-          rm -rf Payload          cp -r Runner.app Payload/
-
-                zip -r ../ipa/Tokerrgjik.ipa Payload/
-
-      - name: Upload IPA artifact          rm -rf Payload
-
-        uses: actions/upload-artifact@v4      
-
-        with:      - name: Upload IPA artifact
-
-          name: ios-ipa        uses: actions/upload-artifact@v4
-
-          path: tokerrgjik_mobile/build/ios/ipa/*.ipa        with:
-
-          retention-days: 90          name: ios-ipa
-
-                path: tokerrgjik_mobile/build/ios/ipa/*.ipa
-
-      - name: Create Release (if tag)          retention-days: 90
-
-        if: startsWith(github.ref, 'refs/tags/v')      
-
-        uses: softprops/action-gh-release@v1      - name: Create Release (if tag)
-
-        with:        if: startsWith(github.ref, 'refs/tags/v')
-
-          files: tokerrgjik_mobile/build/ios/ipa/*.ipa        uses: softprops/action-gh-release@v1
-
-          draft: false        with:
-
-          prerelease: false          files: tokerrgjik_mobile/build/ios/ipa/*.ipa
-
-        env:          draft: false
-
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}          prerelease: false
-
+    name: Build iOS IPA
+    runs-on: macos-14  # macOS with Apple Silicon
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.35.6'
+          channel: 'stable'
+          cache: true
+      
+      - name: Generate API keys
         env:
+          ADMOB_APP_ID_ANDROID: ${{ secrets.ADMOB_APP_ID_ANDROID }}
+          ADMOB_APP_ID_IOS: ${{ secrets.ADMOB_APP_ID_IOS }}
+          ADMOB_BANNER_ANDROID: ${{ secrets.ADMOB_BANNER_ANDROID }}
+          ADMOB_BANNER_IOS: ${{ secrets.ADMOB_BANNER_IOS }}
+          ADMOB_INTERSTITIAL_ANDROID: ${{ secrets.ADMOB_INTERSTITIAL_ANDROID }}
+          ADMOB_INTERSTITIAL_IOS: ${{ secrets.ADMOB_INTERSTITIAL_IOS }}
+          ADMOB_REWARDED_ANDROID: ${{ secrets.ADMOB_REWARDED_ANDROID }}
+          ADMOB_REWARDED_IOS: ${{ secrets.ADMOB_REWARDED_IOS }}
+        run: |
+          CI=true bash scripts/generate_api_keys.sh
+      
+      - name: Get dependencies
+        working-directory: tokerrgjik_mobile
+        run: flutter pub get
+      
+      - name: Build iOS (No Codesign)
+        working-directory: tokerrgjik_mobile
+        run: flutter build ios --release --no-codesign
+      
+      - name: Create IPA
+        working-directory: tokerrgjik_mobile
+        run: |
+          mkdir -p build/ios/ipa
+          cd build/ios/iphoneos
+          mkdir Payload
+          cp -r Runner.app Payload/
+          zip -r ../ipa/Tokerrgjik.ipa Payload/
+          rm -rf Payload
+      
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-ipa
+          path: tokerrgjik_mobile/build/ios/ipa/*.ipa
+          retention-days: 90
+      
+      - name: Create Release (if tag)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: tokerrgjik_mobile/build/ios/ipa/*.ipa
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  build-web:          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
+  build-web:
     name: Build Web Version
-
-    runs-on: ubuntu-latest  build-web:
-
-        name: Build Web Version
-
-    steps:    runs-on: ubuntu-latest
-
-      - name: Checkout repository    
-
-        uses: actions/checkout@v4    steps:
-
-            - name: Checkout repository
-
-      - name: Setup Flutter        uses: actions/checkout@v4
-
-        uses: subosito/flutter-action@v2      
-
-        with:      - name: Setup Flutter
-
-          flutter-version: '3.35.6'        uses: subosito/flutter-action@v2
-
-          channel: 'stable'        with:
-
-          cache: true          flutter-version: '3.35.6'
-
-                channel: 'stable'
-
-      - name: Verify API keys exist          cache: true
-
-        run: |      
-
-          if [ ! -f "tokerrgjik_mobile/lib/config/api_keys.dart" ]; then      - name: Verify API keys exist
-
-            echo "Error: api_keys.dart not found!"        env:
-
-            exit 1        run: |
-
-          fi          if [ ! -f "tokerrgjik_mobile/lib/config/api_keys.dart" ]; then
-
-          echo "API keys file found ✓"            echo "Error: api_keys.dart not found!"
-
-                  exit 1
-
-      - name: Get dependencies          fi
-
-        working-directory: tokerrgjik_mobile          echo "API keys file found ✓"
-
-        run: flutter pub get      
-
-            - name: Get dependencies
-
-      - name: Build Web        working-directory: tokerrgjik_mobile
-
-        working-directory: tokerrgjik_mobile        run: flutter pub get
-
-        run: flutter build web --release      
-
-            - name: Build Web
-
-      - name: Upload Web artifacts        working-directory: tokerrgjik_mobile
-
-        uses: actions/upload-artifact@v4        run: flutter build web --release
-
-        with:      
-
-          name: web-build      - name: Upload Web artifacts
-
-          path: tokerrgjik_mobile/build/web/        uses: actions/upload-artifact@v4
-
-          retention-days: 90        with:
-
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.35.6'
+          channel: 'stable'
+          cache: true
+      
+      - name: Generate API keys
+        env:
+          ADMOB_APP_ID_ANDROID: ${{ secrets.ADMOB_APP_ID_ANDROID }}
+          ADMOB_APP_ID_IOS: ${{ secrets.ADMOB_APP_ID_IOS }}
+          ADMOB_BANNER_ANDROID: ${{ secrets.ADMOB_BANNER_ANDROID }}
+          ADMOB_BANNER_IOS: ${{ secrets.ADMOB_BANNER_IOS }}
+          ADMOB_INTERSTITIAL_ANDROID: ${{ secrets.ADMOB_INTERSTITIAL_ANDROID }}
+          ADMOB_INTERSTITIAL_IOS: ${{ secrets.ADMOB_INTERSTITIAL_IOS }}
+          ADMOB_REWARDED_ANDROID: ${{ secrets.ADMOB_REWARDED_ANDROID }}
+          ADMOB_REWARDED_IOS: ${{ secrets.ADMOB_REWARDED_IOS }}
+        run: |
+          CI=true bash scripts/generate_api_keys.sh
+      
+      - name: Get dependencies
+        working-directory: tokerrgjik_mobile
+        run: flutter pub get
+      
+      - name: Build Web
+        working-directory: tokerrgjik_mobile
+        run: flutter build web --release
+      
+      - name: Upload Web artifacts
+        uses: actions/upload-artifact@v4
+        with:
           name: web-build
           path: tokerrgjik_mobile/build/web/
           retention-days: 90
