@@ -5,6 +5,16 @@ allprojects {
     }
 }
 
+// Configure Kotlin for all subprojects
+subprojects {
+    tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+        kotlinOptions {
+            jvmTarget = "17"
+            languageVersion = "1.9"  // Ensure Kotlin 1.9+ for all modules (required by Sentry)
+        }
+    }
+}
+
 val newBuildDir: Directory =
     rootProject.layout.buildDirectory
         .dir("../../build")

@@ -17,6 +17,7 @@ android {
 
     kotlinOptions {
         jvmTarget = JavaVersion.VERSION_17.toString()  // Updated from 11 to 17
+        languageVersion = "1.9"  // Set Kotlin language version for Sentry compatibility
     }
 
     defaultConfig {
