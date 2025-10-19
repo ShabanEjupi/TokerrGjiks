@@ -1,0 +1,14 @@
+{
+  "name": "tokerrgjik-functions",
+  "version": "1.0.0",
+  "description": "Netlify serverless functions for TokerrGjiks with Neon PostgreSQL",
+  "main": "index.js",
+  "dependencies": {
+    "@neondatabase/serverless": "^0.10.1",
+    "@netlify/functions": "^2.8.2"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"No tests specified\""
+  }
+}

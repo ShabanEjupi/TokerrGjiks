@@ -8,6 +8,10 @@
 /// 3. Add api_keys.dart to .gitignore to keep your keys secure
 
 class ApiKeys {
+  //neon database
+  static const String neonDatabaseUrl = 'postgresql://neondb_owner:npg_d6WqxY0NaMnR@ep-super-water-aedl5ojl-pooler.c-2.us-east-2.aws.neon.tech/neondb?channel_binding=require&sslmode=require';
+  static const String neonDatabaseUrlUnpooled = 'postgresql://neondb_owner:npg_d6WqxY0NaMnR@ep-super-water-aedl5ojl.c-2.us-east-2.aws.neon.tech/neondb?channel_binding=require&sslmode=require';
+
   // ==================== ADMOB ====================
   /// Get your AdMob App IDs from: https://apps.admob.google.com/
   /// Create an account, add your app, and get the App ID

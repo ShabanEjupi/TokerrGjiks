@@ -2,15 +2,25 @@
   base = "tokerrgjik_mobile"
   command = "flutter build web --release --web-renderer canvaskit"
   publish = "tokerrgjik_mobile/build/web"
+  functions = "netlify/functions"
 
 [build.environment]
   # Flutter version
   FLUTTER_VERSION = "3.35.6"
 
+# API redirects
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
+
+[functions]
+  node_bundler = "esbuild"
 
 [context.production]
   command = "flutter build web --release --web-renderer canvaskit"
@@ -29,6 +39,9 @@
     X-Content-Type-Options = "nosniff"
     X-XSS-Protection = "1; mode=block"
     Referrer-Policy = "strict-origin-when-cross-origin"
+    Access-Control-Allow-Origin = "*"
+    Access-Control-Allow-Headers = "Content-Type, Authorization"
+    Access-Control-Allow-Methods = "GET, POST, PUT, DELETE, OPTIONS"
 
 [[headers]]
   for = "/assets/*"

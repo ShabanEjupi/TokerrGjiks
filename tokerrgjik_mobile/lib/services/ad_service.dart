@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:google_mobile_ads/google_mobile_ads.dart';
 import '../config/api_keys.dart';
 
@@ -14,6 +15,12 @@ class AdService {
 
   /// Initialize the Google Mobile Ads SDK
   static Future<void> initialize() async {
+    if (kIsWeb) {
+      // Google Mobile Ads doesn't work on web
+      print('AdService: Skipping initialization on web platform');
+      return;
+    }
+    
     if (!_isInitialized) {
       await MobileAds.instance.initialize();
       _isInitialized = true;
@@ -27,6 +34,8 @@ class AdService {
   /// Get Banner Ad Unit ID (platform-specific)
   /// Uses API keys from configuration
   static String get bannerAdUnitId {
+    if (kIsWeb) return '';
+    
     if (Platform.isAndroid) {
       return ApiKeys.admobBannerAndroid;
     } else if (Platform.isIOS) {
@@ -37,6 +46,8 @@ class AdService {
 
   /// Get Interstitial Ad Unit ID
   static String get interstitialAdUnitId {
+    if (kIsWeb) return '';
+    
     if (Platform.isAndroid) {
       return ApiKeys.admobInterstitialAndroid;
     } else if (Platform.isIOS) {
@@ -47,6 +58,8 @@ class AdService {
 
   /// Get Rewarded Ad Unit ID
   static String get rewardedAdUnitId {
+    if (kIsWeb) return '';
+    
     if (Platform.isAndroid) {
       return ApiKeys.admobRewardedAndroid;
     } else if (Platform.isIOS) {
@@ -57,6 +70,8 @@ class AdService {
 
   /// Create a banner ad for home screen (bottom placement)
   static BannerAd? createHomeBannerAd() {
+    if (kIsWeb) return null;
+    
     if (_homeBannerAd != null) {
       return _homeBannerAd;
     }
@@ -83,6 +98,8 @@ class AdService {
 
   /// Create a banner ad for game over dialog
   static BannerAd? createGameOverBannerAd() {
+    if (kIsWeb) return null;
+    
     if (_gameOverBannerAd != null) {
       return _gameOverBannerAd;
     }
@@ -109,6 +126,8 @@ class AdService {
 
   /// Load interstitial ad (shown after every 3 games to avoid annoyance)
   static void loadInterstitialAd() {
+    if (kIsWeb) return;
+    
     InterstitialAd.load(
       adUnitId: interstitialAdUnitId,
       request: const AdRequest(),
@@ -127,6 +146,8 @@ class AdService {
 
   /// Show interstitial ad if game count threshold reached (every 3 games)
   static void showInterstitialAdIfReady() {
+    if (kIsWeb) return;
+    
     _gameCount++;
     if (_gameCount % 3 == 0 && _interstitialAd != null) {
       _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
@@ -150,6 +171,8 @@ class AdService {
 
   /// Load rewarded ad for extra features
   static void loadRewardedAd() {
+    if (kIsWeb) return;
+    
     RewardedAd.load(
       adUnitId: rewardedAdUnitId,
       request: const AdRequest(),
@@ -168,6 +191,11 @@ class AdService {
 
   /// Show rewarded ad with callback (for earning coins, hints, etc.)
   static void showRewardedAd(Function(int coins) onRewarded) {
+    if (kIsWeb) {
+      print('Rewarded ads not supported on web');
+      return;
+    }
+    
     if (_rewardedAd != null) {
       _rewardedAd!.fullScreenContentCallback = FullScreenContentCallback(
         onAdDismissedFullScreenContent: (ad) {
@@ -195,7 +223,7 @@ class AdService {
   }
 
   /// Check if rewarded ad is ready
-  static bool get isRewardedAdReady => _rewardedAd != null;
+  static bool get isRewardedAdReady => kIsWeb ? false : _rewardedAd != null;
 
   /// Dispose banner ads
   static void disposeHomeBannerAd() {

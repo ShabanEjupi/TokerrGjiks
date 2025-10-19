@@ -269,10 +269,18 @@ class UserProfile extends ChangeNotifier {
     Color? player2,
     Color? board,
   }) {
-    if (theme != null) _boardTheme = theme;
-    if (player1 != null) _player1Color = player1;
-    if (player2 != null) _player2Color = player2;
-    if (board != null) _boardColor = board;
+    if (theme != null) {
+      _boardTheme = theme;
+    }
+    
+    // If any color is changed, automatically switch to custom theme
+    if (player1 != null || player2 != null || board != null) {
+      _boardTheme = 'custom';
+      if (player1 != null) _player1Color = player1;
+      if (player2 != null) _player2Color = player2;
+      if (board != null) _boardColor = board;
+    }
+    
     saveProfile();
     notifyListeners();
   }

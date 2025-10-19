@@ -288,7 +288,7 @@ class _FriendsScreenState extends State<FriendsScreen> with SingleTickerProvider
     Share.share(
       'Eja të luajmë Tokerrgjik! 🎮\n\n'
       'Shkarkoje aplikacionin dhe më sfido:\n'
-      'https://tokerrgjik.app\n\n'
+      'https://tokerrgjik.netlify.app\n\n'
       'Emri im: ${Provider.of<UserProfile>(context, listen: false).username}',
       subject: 'Fto për Tokerrgjik',
     );

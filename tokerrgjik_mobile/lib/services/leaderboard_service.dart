@@ -1,6 +1,7 @@
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import '../config.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'api_service.dart';
 
 class LeaderboardEntry {
   final String username;
@@ -9,6 +10,8 @@ class LeaderboardEntry {
   final double winRate;
   final int winStreak;
   final int rank;
+  final int? coins;
+  final int? level;
   
   LeaderboardEntry({
     required this.username,
@@ -17,16 +20,26 @@ class LeaderboardEntry {
     required this.winRate,
     required this.winStreak,
     required this.rank,
+    this.coins,
+    this.level,
   });
   
   factory LeaderboardEntry.fromJson(Map<String, dynamic> json) {
+    final totalWins = json['total_wins'] ?? json['wins'] ?? 0;
+    final totalLosses = json['total_losses'] ?? json['losses'] ?? 0;
+    final totalDraws = json['total_draws'] ?? json['draws'] ?? 0;
+    final totalGames = totalWins + totalLosses + totalDraws;
+    final winRate = totalGames > 0 ? (totalWins / totalGames * 100) : 0.0;
+    
     return LeaderboardEntry(
-      username: json['username'],
-      wins: json['wins'],
-      totalGames: json['totalGames'],
-      winRate: json['winRate'].toDouble(),
-      winStreak: json['winStreak'],
-      rank: json['rank'],
+      username: json['username'] ?? 'Player',
+      wins: totalWins,
+      totalGames: totalGames,
+      winRate: double.parse(winRate.toStringAsFixed(1)),
+      winStreak: json['current_win_streak'] ?? json['winStreak'] ?? 0,
+      rank: json['rank'] ?? 0,
+      coins: json['coins'],
+      level: json['level'],
     );
   }
 }
@@ -34,69 +47,47 @@ class LeaderboardEntry {
 class LeaderboardService {
   static Future<List<LeaderboardEntry>> getLeaderboard({int limit = 100}) async {
     try {
-      final response = await http.get(
-        Uri.parse('${GameConfig.serverUrl}/api/leaderboard?limit=$limit'),
-      ).timeout(const Duration(seconds: 3));
+      // Try to fetch from real API
+      final data = await ApiService.getLeaderboard(limit: limit);
       
-      if (response.statusCode == 200) {
-        final List<dynamic> data = json.decode(response.body);
+      if (data.isNotEmpty) {
+        print('✅ Loaded ${data.length} players from database');
         return data.map((entry) => LeaderboardEntry.fromJson(entry)).toList();
       }
     } catch (e) {
-      print('Error fetching leaderboard: $e - Using dummy data');
+      print('⚠️ Error fetching leaderboard: $e');
     }
     
-    // Return dummy data if backend is unavailable
-    return _getDummyLeaderboard(limit);
-  }
-  
-  static List<LeaderboardEntry> _getDummyLeaderboard(int limit) {
-    final names = ['Ardit', 'Bleona', 'Dardan', 'Enis', 'Flaka', 'Gresa', 'Hana', 'Ilir', 'Jeta', 'Kushtrim'];
-    return List.generate(limit.clamp(0, 10), (index) {
-      return LeaderboardEntry(
-        username: names[index],
-        wins: 50 - (index * 4),
-        totalGames: 60 - (index * 2),
-        winRate: (80.0 - (index * 5)).clamp(45, 95),
-        winStreak: (10 - index).clamp(0, 10),
-        rank: index + 1,
-      );
-    });
+    // Return empty list instead of dummy data to show the issue
+    print('⚠️ No data from database - returning empty list');
+    return [];
   }
   
   static Future<Map<String, dynamic>?> getUserRank(String username) async {
     try {
-      final response = await http.get(
-        Uri.parse('${GameConfig.serverUrl}/api/leaderboard/user/$username'),
-      ).timeout(const Duration(seconds: 3));
-      
-      if (response.statusCode == 200) {
-        return json.decode(response.body);
+      final rank = await ApiService.getUserRank(username);
+      if (rank != null) {
+        return {
+          'rank': rank,
+          'username': username,
+        };
       }
     } catch (e) {
       print('Error fetching user rank: $e');
     }
-    
-    // Return dummy rank if backend unavailable
-    return {
-      'rank': 15,
-      'username': username,
-      'wins': 25,
-      'total Games': 35,
-      'winRate': 71.4,
-    };
+    return null;
   }
   
   static Future<void> updatePlayerStats(String username, Map<String, int> stats) async {
     try {
-      await http.post(
-        Uri.parse('${GameConfig.serverUrl}/api/leaderboard/update'),
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode({
-          'username': username,
-          ...stats,
-        }),
+      await ApiService.updateUserStats(
+        username: username,
+        wins: stats['wins'],
+        losses: stats['losses'],
+        draws: stats['draws'],
+        coins: stats['coins'],
       );
+      print('✅ Stats updated for $username');
     } catch (e) {
       print('Error updating stats: $e');
     }

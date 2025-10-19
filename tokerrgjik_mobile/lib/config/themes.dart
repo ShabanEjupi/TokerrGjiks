@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 /// Unified theme system for TokerrGjiks
 /// Single source of truth for all theme-related constants
 class AppThemes {
-  // Theme definitions with consistent naming
+  // Theme definitions with consistent naming (removed pink and amethyst)
   static const Map<String, GameTheme> themes = {
     'classic': GameTheme(
       name: '✨ Klasike (Ari)',
@@ -37,21 +37,13 @@ class AppThemes {
       player2Color: Color(0xFF006994), // Darker blue
       description: 'Temë blu oqeani',
     ),
-    'amethyst': GameTheme(
-      name: '💎 Ametist',
-      nameShort: 'Ametist',
-      boardColor: Color(0xFF9966CC), // Amethyst
-      player1Color: Color(0xFFFFF8DC), // Cream
-      player2Color: Color(0xFF4B0082), // Indigo
-      description: 'Temë gurësh të çmuar vjollcë',
-    ),
-    'rose': GameTheme(
-      name: '🌸 Rozë',
-      nameShort: 'Rozë',
-      boardColor: Color(0xFFFF1493), // Deep pink
-      player1Color: Color(0xFFFFF8DC), // Cream
-      player2Color: Color(0xFF9370DB), // Medium purple
-      description: 'Temë rozë dhe vjollcë',
+    'custom': GameTheme(
+      name: '🎨 E personalizuar',
+      nameShort: 'Custom',
+      boardColor: Color(0xFFDAA520), // Default to gold
+      player1Color: Color(0xFFFFF8DC), // Default to cream
+      player2Color: Colors.black87, // Default to black
+      description: 'Krijuar nga ti - zgjedh ngjyrat',
     ),
   };
 
