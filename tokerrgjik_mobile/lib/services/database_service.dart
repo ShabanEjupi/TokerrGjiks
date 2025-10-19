@@ -1,10 +1,14 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:http/http.dart' as http;
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
 import '../models/user_profile.dart';
+import '../config/api_keys.dart';
+import 'auth_service.dart';
 
 /// Enhanced Database Service with SQLite
 /// Provides robust local storage that persists even after app reinstall
@@ -22,6 +26,12 @@ class DatabaseService {
 
   /// Initialize the database
   static Future<void> initialize() async {
+    if (kIsWeb) {
+      // Skip SQLite initialization on web
+      print('DatabaseService: Web mode - using remote database');
+      return;
+    }
+    
     if (_database != null) return;
 
     try {
@@ -525,4 +535,96 @@ class DatabaseService {
     _database = null;
     print('DatabaseService: Closed');
   }
+  
+  // ==================== WEB API METHODS ====================
+  
+  /// Fetch user data from web API
+  static Future<Map<String, dynamic>?> fetchUserFromWeb(String userId) async {
+    if (!kIsWeb) return null;
+    
+    try {
+      final response = await http.get(
+        Uri.parse('${ApiKeys.currentServerUrl}/api/users/$userId'),
+        headers: {
+          if (AuthService.authToken != null)
+            'Authorization': 'Bearer ${AuthService.authToken}',
+        },
+      ).timeout(const Duration(seconds: 10));
+      
+      if (response.statusCode == 200) {
+        return json.decode(response.body);
+      }
+    } catch (e) {
+      print('Error fetching user from web: $e');
+    }
+    return null;
+  }
+  
+  /// Save user data to web API
+  static Future<bool> saveUserToWeb(Map<String, dynamic> userData) async {
+    if (!kIsWeb) return false;
+    
+    try {
+      final response = await http.post(
+        Uri.parse('${ApiKeys.currentServerUrl}/api/users'),
+        headers: {
+          'Content-Type': 'application/json',
+          if (AuthService.authToken != null)
+            'Authorization': 'Bearer ${AuthService.authToken}',
+        },
+        body: json.encode(userData),
+      ).timeout(const Duration(seconds: 10));
+      
+      return response.statusCode == 200 || response.statusCode == 201;
+    } catch (e) {
+      print('Error saving user to web: $e');
+      return false;
+    }
+  }
+  
+  /// Fetch leaderboard from web API
+  static Future<List<Map<String, dynamic>>> fetchLeaderboardFromWeb({int limit = 100}) async {
+    if (!kIsWeb) return [];
+    
+    try {
+      final response = await http.get(
+        Uri.parse('${ApiKeys.currentServerUrl}/api/leaderboard?limit=$limit'),
+        headers: {
+          if (AuthService.authToken != null)
+            'Authorization': 'Bearer ${AuthService.authToken}',
+        },
+      ).timeout(const Duration(seconds: 10));
+      
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        return data.cast<Map<String, dynamic>>();
+      }
+    } catch (e) {
+      print('Error fetching leaderboard from web: $e');
+    }
+    return [];
+  }
+  
+  /// Save game result to web API
+  static Future<bool> saveGameToWeb(Map<String, dynamic> gameData) async {
+    if (!kIsWeb) return false;
+    
+    try {
+      final response = await http.post(
+        Uri.parse('${ApiKeys.currentServerUrl}/api/games'),
+        headers: {
+          'Content-Type': 'application/json',
+          if (AuthService.authToken != null)
+            'Authorization': 'Bearer ${AuthService.authToken}',
+        },
+        body: json.encode(gameData),
+      ).timeout(const Duration(seconds: 10));
+      
+      return response.statusCode == 200 || response.statusCode == 201;
+    } catch (e) {
+      print('Error saving game to web: $e');
+      return false;
+    }
+  }
 }
+

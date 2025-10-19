@@ -506,9 +506,9 @@ class _GameScreenState extends State<GameScreen> {
         elevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Icons.palette),
-            onPressed: _showThemeDialog,
-            tooltip: 'Ndrysho temën',
+            icon: const Icon(Icons.settings),
+            onPressed: () => Navigator.pushNamed(context, '/settings'),
+            tooltip: 'Cilësimet (për temën)',
           ),
           IconButton(
             icon: const Icon(Icons.flag),

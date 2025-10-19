@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/user_profile.dart';
 import '../services/sound_service.dart';
+import '../config/themes.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 
 class SettingsScreen extends StatelessWidget {
@@ -244,18 +245,7 @@ class SettingsScreen extends StatelessWidget {
   }
   
   String _getThemeName(String theme) {
-    switch (theme) {
-      case 'classic':
-        return 'Klasike';
-      case 'modern':
-        return 'Moderne';
-      case 'dark':
-        return 'E errët';
-      case 'custom':
-        return 'E personalizuar';
-      default:
-        return theme;
-    }
+    return AppThemes.getShortName(theme);
   }
   
   void _showColorPicker(BuildContext context, Color current, Function(Color) onColorChanged) {
@@ -297,36 +287,81 @@ class SettingsScreen extends StatelessWidget {
       builder: (context) {
         return AlertDialog(
           title: const Text('Zgjedh temën'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _themeOption(context, 'Klasike', 'classic', profile),
-              _themeOption(context, 'Moderne', 'modern', profile),
-              _themeOption(context, 'E errët', 'dark', profile),
-            ],
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: AppThemes.themeKeys.map((key) {
+                final theme = AppThemes.getTheme(key);
+                return _themeOptionNew(context, key, theme, profile);
+              }).toList(),
+            ),
           ),
         );
       },
     );
   }
   
-  Widget _themeOption(BuildContext context, String name, String value, UserProfile profile) {
-    return ListTile(
-      title: Text(name),
-      leading: Radio<String>(
-        value: value,
-        groupValue: profile.boardTheme,
-        onChanged: (val) {
-          if (val != null) {
-            profile.updateTheme(theme: val);
-            Navigator.pop(context);
-          }
+  Widget _themeOptionNew(BuildContext context, String key, AppThemes.ThemeData theme, UserProfile profile) {
+    bool isSelected = profile.boardTheme == key;
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 4),
+      decoration: BoxDecoration(
+        color: isSelected ? Colors.blue.withOpacity(0.1) : null,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: isSelected ? Colors.blue : Colors.grey.shade300,
+          width: isSelected ? 2 : 1,
+        ),
+      ),
+      child: ListTile(
+        title: Text(
+          theme.name,
+          style: TextStyle(fontWeight: isSelected ? FontWeight.bold : FontWeight.normal),
+        ),
+        subtitle: Text(theme.description, style: const TextStyle(fontSize: 12)),
+        leading: Container(
+          width: 50,
+          height: 50,
+          decoration: BoxDecoration(
+            color: theme.boardColor,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: Colors.black, width: 2),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              Container(
+                width: 15,
+                height: 15,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: theme.player1Color,
+                  border: Border.all(color: Colors.black),
+                ),
+              ),
+              Container(
+                width: 15,
+                height: 15,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: theme.player2Color,
+                  border: Border.all(color: Colors.black),
+                ),
+              ),
+            ],
+          ),
+        ),
+        onTap: () {
+          profile.updateTheme(
+            theme: key,
+            board: theme.boardColor,
+            player1: theme.player1Color,
+            player2: theme.player2Color,
+          );
+          SoundService.playClick();
+          Navigator.pop(context);
         },
       ),
-      onTap: () {
-        profile.updateTheme(theme: value);
-        Navigator.pop(context);
-      },
     );
   }
   
