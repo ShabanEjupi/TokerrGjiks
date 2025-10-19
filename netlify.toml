@@ -24,13 +24,13 @@
   node_bundler = "esbuild"
 
 [context.production]
-  command = "flutter build web --release --web-renderer canvaskit"
+  command = "echo 'Using pre-built Flutter web files for production'"
 
 [context.deploy-preview]
-  command = "flutter build web --release --web-renderer canvaskit"
+  command = "echo 'Using pre-built Flutter web files for preview'"
 
 [context.branch-deploy]
-  command = "flutter build web --release --web-renderer canvaskit"
+  command = "echo 'Using pre-built Flutter web files for branch'"
 
 # Headers for security and caching
 [[headers]]
