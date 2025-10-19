@@ -21,9 +21,100 @@ export async function handler(event, context) {
   const path = event.path.replace('/.netlify/functions/games', '');
 
   try {
-    // POST /games - Save game result
+    // POST /games - Multiple actions
     if (event.httpMethod === 'POST') {
       const data = JSON.parse(event.body);
+      const { action } = data;
+
+      // CREATE MULTIPLAYER SESSION
+      if (action === 'create_session') {
+        const { host_username, guest_username, is_private } = data;
+        
+        const session = await sql`
+          INSERT INTO game_sessions (host_username, guest_username, status, board_state, current_turn)
+          VALUES (${host_username}, ${guest_username || null}, 'waiting', '{}', ${host_username})
+          RETURNING *
+        `;
+        
+        return {
+          statusCode: 201,
+          headers,
+          body: JSON.stringify({ session_id: session[0].id, status: 'waiting' }),
+        };
+      }
+
+      // JOIN SESSION
+      if (action === 'join_session') {
+        const { session_id, username } = data;
+        
+        await sql`
+          UPDATE game_sessions
+          SET guest_username = ${username}, status = 'active'
+          WHERE id = ${session_id}
+        `;
+        
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify({ message: 'Joined session', session_id }),
+        };
+      }
+
+      // MAKE MOVE
+      if (action === 'make_move') {
+        const { session_id, position, move_action, timestamp } = data;
+        
+        // Get current session
+        const session = await sql`SELECT * FROM game_sessions WHERE id = ${session_id}`;
+        if (session.length === 0) {
+          return {
+            statusCode: 404,
+            headers,
+            body: JSON.stringify({ error: 'Session not found' }),
+          };
+        }
+
+        // Update board state (simplified - in production, validate moves)
+        const currentBoard = session[0].board_state || {};
+        currentBoard[`move_${Date.now()}`] = { position, action: move_action, timestamp };
+        
+        // Toggle turn
+        const newTurn = session[0].current_turn === session[0].host_username 
+          ? session[0].guest_username 
+          : session[0].host_username;
+        
+        await sql`
+          UPDATE game_sessions
+          SET board_state = ${JSON.stringify(currentBoard)}, 
+              current_turn = ${newTurn}
+          WHERE id = ${session_id}
+        `;
+        
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify({ message: 'Move recorded', current_turn: newTurn }),
+        };
+      }
+
+      // LEAVE SESSION
+      if (action === 'leave_session') {
+        const { session_id } = data;
+        
+        await sql`
+          UPDATE game_sessions
+          SET status = 'cancelled'
+          WHERE id = ${session_id}
+        `;
+        
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify({ message: 'Left session' }),
+        };
+      }
+
+      // SAVE GAME RESULT (original functionality)
       const {
         username,
         game_mode,
@@ -85,26 +176,70 @@ export async function handler(event, context) {
       };
     }
 
-    // GET /games/:username - Get game history
-    if (event.httpMethod === 'GET' && path.startsWith('/')) {
-      const username = path.substring(1).split('?')[0];
+    // GET /games - Multiple queries
+    if (event.httpMethod === 'GET') {
       const params = new URL(event.rawUrl).searchParams;
-      const limit = parseInt(params.get('limit') || '50');
-      const offset = parseInt(params.get('offset') || '0');
+      const action = params.get('action');
+      
+      // GET SESSION STATE (for polling)
+      if (action === 'get_state') {
+        const sessionId = params.get('session_id');
+        
+        const session = await sql`
+          SELECT * FROM game_sessions WHERE id = ${sessionId}
+        `;
+        
+        if (session.length === 0) {
+          return {
+            statusCode: 404,
+            headers,
+            body: JSON.stringify({ error: 'Session not found' }),
+          };
+        }
+        
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify(session[0]),
+        };
+      }
 
-      const results = await sql`
-        SELECT * FROM game_history
-        WHERE username = ${username}
-        ORDER BY played_at DESC
-        LIMIT ${limit}
-        OFFSET ${offset}
-      `;
+      // LIST AVAILABLE SESSIONS
+      if (action === 'list_sessions') {
+        const sessions = await sql`
+          SELECT * FROM game_sessions 
+          WHERE status = 'waiting'
+          ORDER BY created_at DESC
+          LIMIT 20
+        `;
+        
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify({ sessions }),
+        };
+      }
 
-      return {
-        statusCode: 200,
-        headers,
-        body: JSON.stringify({ games: results }),
-      };
+      // GET GAME HISTORY (original functionality)
+      const username = path.substring(1).split('?')[0];
+      if (username) {
+        const limit = parseInt(params.get('limit') || '50');
+        const offset = parseInt(params.get('offset') || '0');
+
+        const results = await sql`
+          SELECT * FROM game_history
+          WHERE username = ${username}
+          ORDER BY played_at DESC
+          LIMIT ${limit}
+          OFFSET ${offset}
+        `;
+
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify({ games: results }),
+        };
+      }
     }
 
     return {

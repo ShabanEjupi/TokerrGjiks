@@ -3,8 +3,8 @@
 class PaymentConfig {
   // PayPal Configuration
   // TODO: Set these via environment variables or secure storage
-  static String paypalClientId = 'YOUR_PAYPAL_CLIENT_ID'; // Set via terminal
-  static String paypalSecret = 'YOUR_PAYPAL_SECRET'; // Set via terminal
+  static String paypalClientId = 'AYR4F9jJJRVDlHihMS_2LDHHyB2f2InhCHRngwbDEvd-FIaEyOptKB3Ijq8xjs3advV3qFrME8qxAzJE'; // Set via terminal
+  static String paypalSecret = 'EAmopBz-iArkJbkjGEWjpdD2f81VtNh_Z6lpk3WTHOQfnLeL0AYLn1LtsLuT3Yb-zTt4ok2wRQnnOM8-'; // Set via terminal
   static bool useSandbox = true; // Change to false for production
   
   // Payment Packages

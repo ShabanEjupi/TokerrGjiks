@@ -1,35 +1,23 @@
 import { neon } from '@neondatabase/serverless';
 
-const sql = neon(process.env.NEON_DATABASE_URL);
+const sql = neon(process.env.NEON_DATABASE_URL || process.env.NETLIFY_DATABASE_URL);
 
-// Email service configuration (use SendGrid, Mailgun, or AWS SES)
-const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY || 'YOUR_SENDGRID_API_KEY';
-const FROM_EMAIL = 'noreply@tokerrgjik.app';
-
+// Simplified email logging (no SendGrid needed!)
+// Emails are logged to Netlify console for testing
+// Students can see email content in Netlify function logs
 async function sendEmail(to, subject, html) {
-  // For demo purposes, we'll just log the email
-  // In production, integrate with SendGrid, Mailgun, or AWS SES
-  
-  console.log('=== EMAIL NOTIFICATION ===');
+  console.log('\n========================================');
+  console.log('📧 EMAIL NOTIFICATION');
+  console.log('========================================');
   console.log(`To: ${to}`);
   console.log(`Subject: ${subject}`);
-  console.log(`Body: ${html}`);
-  console.log('========================');
+  console.log('----------------------------------------');
+  console.log(html);
+  console.log('========================================\n');
   
-  // Example SendGrid integration (uncomment and configure in production):
-  /*
-  const sgMail = require('@sendgrid/mail');
-  sgMail.setApiKey(SENDGRID_API_KEY);
-  
-  const msg = {
-    to,
-    from: FROM_EMAIL,
-    subject,
-    html,
-  };
-  
-  await sgMail.send(msg);
-  */
+  // For production with Testmail.app or another service:
+  // You can integrate their API here when ready
+  // Example: await fetch('https://api.testmail.app/api/send', {...})
   
   return true;
 }

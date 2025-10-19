@@ -1,12 +1,10 @@
 [build]
-  # No build command - we'll push pre-built files
-  # Build locally with: cd tokerrgjik_mobile && flutter build web --release
-  command = "echo 'Using pre-built Flutter web files'"
+  # Install dependencies first, then use pre-built files
+  command = "cd netlify/functions && npm install && cd ../.. && echo 'Using pre-built Flutter web files'"
   publish = "tokerrgjik_mobile/build/web"
   functions = "netlify/functions"
 
 [build.environment]
-  # Not needed since we're using pre-built files
   NODE_VERSION = "18"
 
 # API redirects
@@ -24,13 +22,13 @@
   node_bundler = "esbuild"
 
 [context.production]
-  command = "echo 'Using pre-built Flutter web files for production'"
+  command = "cd netlify/functions && npm install && cd ../.. && echo 'Using pre-built Flutter web files for production'"
 
 [context.deploy-preview]
-  command = "echo 'Using pre-built Flutter web files for preview'"
+  command = "cd netlify/functions && npm install && cd ../.. && echo 'Using pre-built Flutter web files for preview'"
 
 [context.branch-deploy]
-  command = "echo 'Using pre-built Flutter web files for branch'"
+  command = "cd netlify/functions && npm install && cd ../.. && echo 'Using pre-built Flutter web files for branch'"
 
 # Headers for security and caching
 [[headers]]
