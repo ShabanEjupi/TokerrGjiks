@@ -55,16 +55,26 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
               onRefresh: _loadLeaderboard,
-              child: Consumer<UserProfile>(
-                builder: (context, profile, child) {
-                  return Column(
-                    children: [
-                      _buildUserRankCard(profile),
-                      _buildTopThree(),
-                      Expanded(
-                        child: _buildLeaderboardList(),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  return SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(
+                        minHeight: constraints.maxHeight,
                       ),
-                    ],
+                      child: Consumer<UserProfile>(
+                        builder: (context, profile, child) {
+                          return Column(
+                            children: [
+                              _buildUserRankCard(profile),
+                              _buildTopThree(),
+                              _buildLeaderboardList(),
+                            ],
+                          );
+                        },
+                      ),
+                    ),
                   );
                 },
               ),
@@ -240,24 +250,27 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
 
     return Column(
       children: [
-        Expanded(
-          child: ListView.builder(
-            itemCount: displayList.length,
-            itemBuilder: (context, index) {
-              final entry = displayList[index];
-              final actualRank = startIndex + index + 1;
-              
-              return _buildLeaderboardTile(entry, actualRank);
-            },
-          ),
+        ListView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: displayList.length,
+          itemBuilder: (context, index) {
+            final entry = displayList[index];
+            final actualRank = startIndex + index + 1;
+            
+            return _buildLeaderboardTile(entry, actualRank);
+          },
         ),
         if (!_showFullLeaderboard && _leaderboard.length > 10)
-          TextButton(
-            onPressed: () {
-              setState(() => _showFullLeaderboard = true);
-              SoundService.playClick();
-            },
-            child: const Text('Shfaq të gjithë →'),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: TextButton(
+              onPressed: () {
+                setState(() => _showFullLeaderboard = true);
+                SoundService.playClick();
+              },
+              child: const Text('Shfaq të gjithë →'),
+            ),
           ),
       ],
     );

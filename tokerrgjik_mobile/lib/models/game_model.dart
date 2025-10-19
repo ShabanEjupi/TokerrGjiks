@@ -238,7 +238,7 @@ class GameModel {
       return true;
     }
 
-    // Win if opponent cannot move (in moving phase)
+    // Win if opponent cannot move (blocked - in moving phase)
     if (phase == 'moving' && piecesLeft[opponent]! == 0) {
       bool canMove = false;
       for (int i = 0; i < 24; i++) {
@@ -265,6 +265,31 @@ class GameModel {
     }
 
     return false;
+  }
+
+  // Check if current player has no valid moves (blocked)
+  bool isPlayerBlocked() {
+    // Only check during moving phase
+    if (phase != 'moving' || piecesLeft[currentPlayer]! > 0) {
+      return false;
+    }
+
+    // Get all pieces of current player
+    List<int> playerPieces = [];
+    for (int i = 0; i < 24; i++) {
+      if (board[i] == currentPlayer) {
+        playerPieces.add(i);
+      }
+    }
+
+    // Check if any piece has valid moves
+    for (int piecePos in playerPieces) {
+      if (getValidMoves(piecePos).isNotEmpty) {
+        return false; // Has at least one valid move
+      }
+    }
+
+    return true; // No valid moves - blocked!
   }
 
   // Switch to next player
