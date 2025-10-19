@@ -195,7 +195,7 @@ class _ShopScreenState extends State<ShopScreen> with SingleTickerProviderStateM
                 const Icon(Icons.block, size: 100, color: Colors.orange),
                 const SizedBox(height: 20),
                 const Text(
-                  'Pa Reklama!',
+                  'Pa reklama!',
                   style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 10),
@@ -219,7 +219,7 @@ class _ShopScreenState extends State<ShopScreen> with SingleTickerProviderStateM
                     const Icon(Icons.play_circle_outline, size: 80, color: Color(0xFF667eea)),
                     const SizedBox(height: 16),
                     const Text(
-                      'Shiko Reklamë - Merr Monedha!',
+                      'Shiko reklamë - Merr monedha!',
                       style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                       textAlign: TextAlign.center,
                     ),
@@ -237,7 +237,7 @@ class _ShopScreenState extends State<ShopScreen> with SingleTickerProviderStateM
                       icon: const Icon(Icons.play_arrow, size: 28),
                       label: Text(
                         AdService.isRewardedAdReady
-                            ? 'Shiko Reklamë'
+                            ? 'Shiko reklamë'
                             : 'Duke u ngarkuar...',
                         style: const TextStyle(fontSize: 18),
                       ),
@@ -259,7 +259,7 @@ class _ShopScreenState extends State<ShopScreen> with SingleTickerProviderStateM
             ),
             const SizedBox(height: 24),
             _buildInfoCard(
-              'Përfitime të Reklamave:',
+              'Përfitime të reklamave:',
               [
                 '• Merr 3 monedha për çdo reklamë',
                 '• Reklamat janë 15-30 sekonda',
@@ -432,7 +432,7 @@ class _ShopScreenState extends State<ShopScreen> with SingleTickerProviderStateM
                         borderRadius: BorderRadius.circular(30),
                       ),
                     ),
-                    child: const Text('Bli Tani', style: TextStyle(fontSize: 16)),
+                    child: const Text('Bli tani', style: TextStyle(fontSize: 16)),
                   ),
                 ],
               ),
@@ -559,7 +559,7 @@ class _ShopScreenState extends State<ShopScreen> with SingleTickerProviderStateM
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Konfirmo Blerjen'),
+          title: const Text('Konfirmo blerjen'),
           content: Text('Dëshiron të blesh PRO për $months muaj me €$price?'),
           actions: [
             TextButton(
@@ -594,7 +594,7 @@ class _ShopScreenState extends State<ShopScreen> with SingleTickerProviderStateM
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Konfirmo Blerjen'),
+          title: const Text('Konfirmo blerjen'),
           content: Text('Dëshiron të blesh $coins monedha me $price?'),
           actions: [
             TextButton(

@@ -264,7 +264,7 @@ class SettingsScreen extends StatelessWidget {
       builder: (context) {
         Color pickerColor = current;
         return AlertDialog(
-          title: const Text('Zgjedh Ngjyrën'),
+          title: const Text('Zgjedh ngjyrën'),
           content: SingleChildScrollView(
             child: ColorPicker(
               pickerColor: pickerColor,
