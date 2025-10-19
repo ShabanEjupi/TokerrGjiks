@@ -185,7 +185,7 @@ class AdService {
       _rewardedAd!.show(
         onUserEarnedReward: (ad, reward) {
           print('User earned reward: ${reward.amount} ${reward.type}');
-          onRewarded(100); // Give 100 coins reward
+          onRewarded(2); // Give 2 points reward
         },
       );
     } else {
