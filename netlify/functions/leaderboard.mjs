@@ -1,6 +1,14 @@
 import { neon } from '@neondatabase/serverless';
 
-const sql = neon(process.env.NEON_DATABASE_URL);
+const connectionString = process.env.NEON_DATABASE_URL 
+  || process.env.NETLIFY_DATABASE_URL 
+  || process.env.DATABASE_URL;
+
+if (!connectionString) {
+  console.error('❌ DATABASE ERROR: No connection string found! Set NEON_DATABASE_URL in Netlify.');
+}
+
+const sql = connectionString ? neon(connectionString) : null;
 
 /**
  * Leaderboard endpoint handler
@@ -22,6 +30,17 @@ export async function handler(event, context) {
   const params = new URL(event.rawUrl).searchParams;
 
   try {
+    // Check if database is configured
+    if (!sql) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({ 
+          error: 'Database not configured. Set NEON_DATABASE_URL in Netlify environment variables.' 
+        }),
+      };
+    }
+
     // GET /leaderboard - Get global leaderboard
     if (event.httpMethod === 'GET' && !path.includes('rank')) {
       const limit = parseInt(params.get('limit') || '100');

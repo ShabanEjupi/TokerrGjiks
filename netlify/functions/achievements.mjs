@@ -1,6 +1,14 @@
 import { neon } from '@neondatabase/serverless';
 
-const sql = neon(process.env.NEON_DATABASE_URL);
+const connectionString = process.env.NEON_DATABASE_URL 
+  || process.env.NETLIFY_DATABASE_URL 
+  || process.env.DATABASE_URL;
+
+if (!connectionString) {
+  console.error('❌ DATABASE ERROR: No connection string found! Set NEON_DATABASE_URL in Netlify.');
+}
+
+const sql = connectionString ? neon(connectionString) : null;
 
 // Predefined achievements
 const ACHIEVEMENTS = [
@@ -27,6 +35,17 @@ export default async (req, res) => {
   }
   
   try {
+    // Check if database is configured
+    if (!sql) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({ 
+          error: 'Database not configured. Set NEON_DATABASE_URL in Netlify environment variables.' 
+        }),
+      };
+    }
+
     // GET: Fetch user achievements
     if (req.method === 'GET') {
       const { username, action } = req.query;

@@ -1,7 +1,15 @@
 import { neon } from '@neondatabase/serverless';
 import crypto from 'crypto';
 
-const sql = neon(process.env.NEON_DATABASE_URL);
+const connectionString = process.env.NEON_DATABASE_URL 
+  || process.env.NETLIFY_DATABASE_URL 
+  || process.env.DATABASE_URL;
+
+if (!connectionString) {
+  console.error('❌ DATABASE ERROR: No connection string found! Set NEON_DATABASE_URL in Netlify.');
+}
+
+const sql = connectionString ? neon(connectionString) : null;
 
 // Simple JWT generation (for demo - use proper JWT library in production)
 function generateToken(username) {
@@ -11,6 +19,17 @@ function generateToken(username) {
 
 function verifyToken(token) {
   try {
+    // Check if database is configured
+    if (!sql) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({ 
+          error: 'Database not configured. Set NEON_DATABASE_URL in Netlify environment variables.' 
+        }),
+      };
+    }
+
     const payload = JSON.parse(Buffer.from(token, 'base64').toString());
     return payload.username;
   } catch {

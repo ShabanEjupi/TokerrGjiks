@@ -175,6 +175,21 @@ class ApiService {
     return [];
   }
   
+  /// Update user profile (username, email, full name)
+  static Future<Map<String, dynamic>?> updateUserProfile({
+    required String oldUsername,
+    String? newUsername,
+    String? email,
+    String? fullName,
+  }) async {
+    return await put('/users/profile', {
+      'old_username': oldUsername,
+      if (newUsername != null && newUsername.isNotEmpty) 'new_username': newUsername,
+      if (email != null) 'email': email,
+      if (fullName != null) 'full_name': fullName,
+    });
+  }
+  
   // ==================== LEADERBOARD ENDPOINTS ====================
   
   /// Get global leaderboard

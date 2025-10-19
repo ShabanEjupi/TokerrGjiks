@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../config/payment_config.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 /// PayPal Payment Service for in-app purchases
 /// Supports both sandbox (testing) and production modes
@@ -42,7 +43,7 @@ class PayPalService {
   }
   
   /// Create a PayPal order
-  static Future<String?> createOrder({
+  static Future<Map<String, dynamic>?> createOrder({
     required String amount,
     required String currency,
     required String description,
@@ -77,7 +78,23 @@ class PayPalService {
       
       if (response.statusCode == 201) {
         final data = json.decode(response.body);
-        return data['id'];
+        final orderId = data['id'];
+        
+        // Get approval URL
+        final links = data['links'] as List;
+        final approveLink = links.firstWhere(
+          (link) => link['rel'] == 'approve',
+          orElse: () => null,
+        );
+        
+        if (approveLink != null) {
+          return {
+            'order_id': orderId,
+            'approval_url': approveLink['href'],
+          };
+        }
+        
+        return {'order_id': orderId};
       }
     } catch (e) {
       print('Error creating PayPal order: $e');
@@ -171,15 +188,39 @@ class PayPalService {
     );
     
     try {
-      final orderId = await createOrder(
+      final orderData = await createOrder(
         amount: amount,
         currency: 'EUR',
         description: description,
       );
       
-      if (orderId != null) {
-        Navigator.pop(context);
-        return true;
+      if (orderData != null && orderData['approval_url'] != null) {
+        Navigator.pop(context); // Close loading dialog
+        
+        // Open PayPal checkout page
+        final approvalUrl = orderData['approval_url'];
+        final uri = Uri.parse(approvalUrl);
+        
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(
+            uri,
+            mode: LaunchMode.externalApplication,
+          );
+          
+          // Show message
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('PayPal checkout opened. Complete payment in browser.'),
+                duration: Duration(seconds: 5),
+              ),
+            );
+          }
+          
+          return true;
+        } else {
+          print('Could not launch PayPal URL: $approvalUrl');
+        }
       }
     } catch (e) {
       print('Error purchasing coins: $e');

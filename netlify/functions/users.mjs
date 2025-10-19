@@ -1,7 +1,16 @@
 import { neon } from '@neondatabase/serverless';
 
-// Initialize Neon client
-const sql = neon(process.env.NEON_DATABASE_URL);
+// Try multiple environment variable names
+const connectionString = process.env.NEON_DATABASE_URL 
+  || process.env.NETLIFY_DATABASE_URL 
+  || process.env.DATABASE_URL;
+
+if (!connectionString) {
+  console.error('❌ DATABASE ERROR: No connection string found! Set NEON_DATABASE_URL in Netlify.');
+}
+
+// Initialize Neon client (null if no connection string)
+const sql = connectionString ? neon(connectionString) : null;
 
 /**
  * User endpoints handler
@@ -25,6 +34,17 @@ export async function handler(event, context) {
   const method = event.httpMethod;
 
   try {
+    // Check if database is configured
+    if (!sql) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({ 
+          error: 'Database not configured. Set NEON_DATABASE_URL in Netlify environment variables.' 
+        }),
+      };
+    }
+
     // GET /users/:username - Get user by username
     if (method === 'GET' && path.startsWith('/') && !path.includes('search')) {
       const username = path.substring(1);
@@ -163,6 +183,86 @@ export async function handler(event, context) {
         statusCode: 200,
         headers,
         body: JSON.stringify(result[0]),
+      };
+    }
+
+    // PUT /users/profile - Update user profile (username, email, full_name)
+    if (method === 'PUT' && path === '/profile') {
+      const data = JSON.parse(event.body);
+      const { old_username, new_username, email, full_name } = data;
+
+      if (!old_username) {
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({ error: 'old_username is required' }),
+        };
+      }
+
+      // Check if user exists
+      const existingUser = await sql`SELECT * FROM users WHERE username = ${old_username}`;
+      if (existingUser.length === 0) {
+        return {
+          statusCode: 404,
+          headers,
+          body: JSON.stringify({ error: 'User not found' }),
+        };
+      }
+
+      // If changing username, check if new username is already taken
+      if (new_username && new_username !== old_username) {
+        const usernameCheck = await sql`SELECT username FROM users WHERE username = ${new_username}`;
+        if (usernameCheck.length > 0) {
+          return {
+            statusCode: 409,
+            headers,
+            body: JSON.stringify({ error: 'Username already taken' }),
+          };
+        }
+      }
+
+      // Build dynamic update query
+      const updateFields = [];
+      const values = [];
+
+      if (new_username && new_username !== old_username) {
+        updateFields.push('username = $' + (updateFields.length + 1));
+        values.push(new_username);
+      }
+      if (email !== undefined) {
+        updateFields.push('email = $' + (updateFields.length + 1));
+        values.push(email);
+      }
+      if (full_name !== undefined) {
+        updateFields.push('full_name = $' + (updateFields.length + 1));
+        values.push(full_name);
+      }
+
+      if (updateFields.length === 0) {
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({ error: 'No fields to update' }),
+        };
+      }
+
+      updateFields.push('updated_at = NOW()');
+
+      const result = await sql`
+        UPDATE users 
+        SET ${sql(updateFields.join(', '))}
+        WHERE username = ${old_username}
+        RETURNING *
+      `;
+
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({ 
+          success: true, 
+          user: result[0],
+          message: 'Profile updated successfully' 
+        }),
       };
     }
 

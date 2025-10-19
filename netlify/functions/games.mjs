@@ -1,6 +1,14 @@
 import { neon } from '@neondatabase/serverless';
 
-const sql = neon(process.env.NEON_DATABASE_URL);
+const connectionString = process.env.NEON_DATABASE_URL 
+  || process.env.NETLIFY_DATABASE_URL 
+  || process.env.DATABASE_URL;
+
+if (!connectionString) {
+  console.error('❌ DATABASE ERROR: No connection string found! Set NEON_DATABASE_URL in Netlify.');
+}
+
+const sql = connectionString ? neon(connectionString) : null;
 
 /**
  * Games endpoint handler
@@ -21,6 +29,17 @@ export async function handler(event, context) {
   const path = event.path.replace('/.netlify/functions/games', '');
 
   try {
+    // Check if database is configured
+    if (!sql) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({ 
+          error: 'Database not configured. Set NEON_DATABASE_URL in Netlify environment variables.' 
+        }),
+      };
+    }
+
     // POST /games - Multiple actions
     if (event.httpMethod === 'POST') {
       const data = JSON.parse(event.body);

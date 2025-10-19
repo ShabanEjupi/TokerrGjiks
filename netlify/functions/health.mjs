@@ -1,6 +1,15 @@
 import { neon } from '@neondatabase/serverless';
 
-const sql = neon(process.env.NEON_DATABASE_URL);
+// Try multiple environment variable names (Neon extension uses different names)
+const connectionString = process.env.NEON_DATABASE_URL 
+  || process.env.NETLIFY_DATABASE_URL 
+  || process.env.DATABASE_URL;
+
+if (!connectionString) {
+  console.error('❌ No database connection string found! Set NEON_DATABASE_URL in Netlify environment variables.');
+}
+
+const sql = connectionString ? neon(connectionString) : null;
 
 /**
  * Health check endpoint
@@ -19,6 +28,20 @@ export async function handler(event, context) {
   }
 
   try {
+    // Check if database is configured
+    if (!sql) {
+      return {
+        statusCode: 500,
+        headers,
+        body: JSON.stringify({
+          status: 'error',
+          message: 'Database not configured',
+          instructions: 'Set NEON_DATABASE_URL in Netlify environment variables',
+          timestamp: new Date().toISOString(),
+        }),
+      };
+    }
+
     // Test database connection
     const result = await sql`SELECT 1 as test`;
     
