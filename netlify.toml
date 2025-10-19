@@ -1,0 +1,46 @@
+[build]
+  base = "tokerrgjik_mobile"
+  command = "flutter build web --release --web-renderer canvaskit"
+  publish = "tokerrgjik_mobile/build/web"
+
+[build.environment]
+  # Flutter version
+  FLUTTER_VERSION = "3.35.6"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[context.production]
+  command = "flutter build web --release --web-renderer canvaskit"
+
+[context.deploy-preview]
+  command = "flutter build web --release --web-renderer canvaskit"
+
+[context.branch-deploy]
+  command = "flutter build web --release --web-renderer canvaskit"
+
+# Headers for security and caching
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    X-XSS-Protection = "1; mode=block"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*.js"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*.css"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
