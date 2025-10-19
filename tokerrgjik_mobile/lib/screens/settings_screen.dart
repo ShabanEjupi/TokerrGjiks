@@ -56,7 +56,7 @@ class SettingsScreen extends StatelessWidget {
               // Difficulty Settings
               _buildSection(
                 context,
-                title: '🎯 Vështirësia e AI',
+                title: '🎯 Vështirësitë e AI',
                 children: [
                   RadioListTile<String>(
                     title: const Text('E lehtë'),
@@ -141,7 +141,7 @@ class SettingsScreen extends StatelessWidget {
                     ),
                   ),
                   ListTile(
-                    title: const Text('Ngjyra e Bordit'),
+                    title: const Text('Ngjyra e tabelës'),
                     trailing: Container(
                       width: 40,
                       height: 40,
@@ -207,7 +207,7 @@ class SettingsScreen extends StatelessWidget {
                   ),
                   const ListTile(
                     title: Text('Zhvilluar nga'),
-                    subtitle: Text('AlbaCode Solutions'),
+                    subtitle: Text('DogaCode Solutions'),
                   ),
                 ],
               ),
@@ -250,9 +250,9 @@ class SettingsScreen extends StatelessWidget {
       case 'modern':
         return 'Moderne';
       case 'dark':
-        return 'E Errët';
+        return 'E errët';
       case 'custom':
-        return 'E Personalizuar';
+        return 'E personalizuar';
       default:
         return theme;
     }
@@ -302,7 +302,7 @@ class SettingsScreen extends StatelessWidget {
             children: [
               _themeOption(context, 'Klasike', 'classic', profile),
               _themeOption(context, 'Moderne', 'modern', profile),
-              _themeOption(context, 'E Errët', 'dark', profile),
+              _themeOption(context, 'E errët', 'dark', profile),
             ],
           ),
         );
@@ -336,11 +336,11 @@ class SettingsScreen extends StatelessWidget {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Ndrysho Emrin'),
+          title: const Text('Ndrysho emrin'),
           content: TextField(
             controller: controller,
             decoration: const InputDecoration(
-              labelText: 'Emri i Ri',
+              labelText: 'Emri i ri',
               border: OutlineInputBorder(),
             ),
             maxLength: 20,

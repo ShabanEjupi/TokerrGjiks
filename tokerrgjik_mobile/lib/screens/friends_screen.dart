@@ -247,11 +247,11 @@ class _FriendsScreenState extends State<FriendsScreen> with SingleTickerProvider
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Shto Mik'),
+          title: const Text('Shto mik'),
           content: TextField(
             controller: controller,
             decoration: const InputDecoration(
-              labelText: 'Emri i Përdoruesit',
+              labelText: 'Emri i përdoruesit',
               hintText: 'Shkruaj emrin...',
               border: OutlineInputBorder(),
               prefixIcon: Icon(Icons.person_search),
@@ -276,7 +276,7 @@ class _FriendsScreenState extends State<FriendsScreen> with SingleTickerProvider
                   );
                 }
               },
-              child: const Text('Dërgo Kërkesë'),
+              child: const Text('Dërgo kërkesë'),
             ),
           ],
         );
@@ -316,7 +316,7 @@ class _FriendsScreenState extends State<FriendsScreen> with SingleTickerProvider
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Hiq Mik'),
+          title: const Text('Hiq mik'),
           content: Text('Je i sigurt që dëshiron të heqësh $friend nga miqtë?'),
           actions: [
             TextButton(

@@ -5,8 +5,19 @@ allprojects {
     }
 }
 
-// Configure Kotlin for all subprojects
+// Configure Kotlin and Java for all subprojects to ensure consistency
 subprojects {
+    // Set Java compatibility for all subprojects
+    afterEvaluate {
+        extensions.findByType<com.android.build.gradle.BaseExtension>()?.apply {
+            compileOptions {
+                sourceCompatibility = JavaVersion.VERSION_17
+                targetCompatibility = JavaVersion.VERSION_17
+            }
+        }
+    }
+    
+    // Set Kotlin options for all subprojects
     tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
         kotlinOptions {
             jvmTarget = "17"

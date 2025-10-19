@@ -253,7 +253,7 @@ class _GameScreenState extends State<GameScreen> {
                 ),
                 const Divider(),
                 _themeOption(
-                  '🌙 E Errët', 
+                  '🌙 E errët', 
                   Colors.grey.shade800, 
                   Colors.white, 
                   const Color(0xFFFFD700), // Bright gold
@@ -391,13 +391,13 @@ class _GameScreenState extends State<GameScreen> {
     if (game.aiEnabled) {
       // In AI mode: Player 1 is always the student, Player 2 is AI
       if (winner == 1) {
-        winnerName = 'Ti Fitove!'; // Student won
+        winnerName = 'Ti fitove!'; // Student won
       } else {
-        winnerName = 'AI Fitoi!'; // AI won
+        winnerName = 'AI fitoi!'; // AI won
       }
     } else {
       // In local multiplayer mode
-      winnerName = 'Lojtari $winner Fitoi!';
+      winnerName = 'Lojtari $winner fitoi!';
     }
     
     showDialog(
@@ -419,7 +419,7 @@ class _GameScreenState extends State<GameScreen> {
               Navigator.pop(context);
               resetGame();
             },
-            child: const Text('Lojë e Re'),
+            child: const Text('Lojë e re'),
           ),
         ],
       ),
@@ -432,7 +432,7 @@ class _GameScreenState extends State<GameScreen> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text(
-            'Si të Luash Tokerrgjik',
+            'Si të luash tokerrgjik',
             style: TextStyle(
               fontWeight: FontWeight.bold,
               color: Color(0xFF667eea),
@@ -643,7 +643,7 @@ class _GameScreenState extends State<GameScreen> {
                     ),
                     _buildSmallButton(
                       icon: Icons.refresh,
-                      label: 'E Re',
+                      label: 'E re',
                       onPressed: resetGame,
                       color: const Color(0xFF667eea),
                     ),

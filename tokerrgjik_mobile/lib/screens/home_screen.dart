@@ -265,7 +265,7 @@ class _HomeScreenState extends State<HomeScreen> {
         const SizedBox(height: 16),
         _buildMenuButton(
           icon: Icons.people,
-          label: 'Luaj me Mik (Lokal)',
+          label: 'Luaj me mik (Lokal)',
           onPressed: () {
             Navigator.push(
               context,
@@ -328,7 +328,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           SizedBox(height: 5),
           Text(
-            'AlbaCode Solutions',
+            'DogaCode Solutions',
             style: TextStyle(
               color: Colors.white,
               fontSize: 16,
@@ -337,7 +337,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           SizedBox(height: 5),
           Text(
-            'Loja Tradicionale Shqiptare - 2025',
+            'Lojë tradicionale shqiptare - 2025',
             style: TextStyle(color: Colors.white60, fontSize: 14),
           ),
         ],
