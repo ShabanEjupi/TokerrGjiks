@@ -6,7 +6,6 @@ import 'package:http/http.dart' as http;
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:sqflite/sqflite.dart';
-import '../models/user_profile.dart';
 import '../config/api_keys.dart';
 import 'auth_service.dart';
 

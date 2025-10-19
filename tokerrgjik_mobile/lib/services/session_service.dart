@@ -9,7 +9,7 @@ import 'auth_service.dart';
 /// - Web: Uses backend API with polling/WebSocket
 /// - Mobile: Offline mode (local multiplayer not supported yet)
 class SessionService {
-  static const String _baseUrl = ApiKeys.currentServerUrl;
+  static final String _baseUrl = ApiKeys.currentServerUrl;
   static String? _currentSessionId;
   static StreamController<Map<String, dynamic>>? _gameUpdatesController;
   static Timer? _pollingTimer;

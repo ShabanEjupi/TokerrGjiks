@@ -9,7 +9,7 @@ import 'dart:math';
 /// - Web: Uses backend API with JWT tokens
 /// - Mobile: Uses local storage (offline mode)
 class AuthService {
-  static const String _baseUrl = ApiKeys.currentServerUrl;
+  static final String _baseUrl = ApiKeys.currentServerUrl;
   static String? _currentUserId;
   static String? _authToken;
   static String? _currentUsername;

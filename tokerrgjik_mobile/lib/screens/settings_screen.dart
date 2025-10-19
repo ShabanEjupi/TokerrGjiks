@@ -301,8 +301,13 @@ class SettingsScreen extends StatelessWidget {
     );
   }
   
-  Widget _themeOptionNew(BuildContext context, String key, AppThemes.ThemeData theme, UserProfile profile) {
+  Widget _themeOptionNew(BuildContext context, String key, Map<String, dynamic> theme, UserProfile profile) {
     bool isSelected = profile.boardTheme == key;
+    final themeName = theme['name'] as String;
+    final themeDesc = theme['description'] as String;
+    final boardColor = theme['boardColor'] as Color;
+    final player1Color = theme['player1Color'] as Color;
+    final player2Color = theme['player2Color'] as Color;
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 4),
       decoration: BoxDecoration(
@@ -315,15 +320,15 @@ class SettingsScreen extends StatelessWidget {
       ),
       child: ListTile(
         title: Text(
-          theme.name,
+          themeName,
           style: TextStyle(fontWeight: isSelected ? FontWeight.bold : FontWeight.normal),
         ),
-        subtitle: Text(theme.description, style: const TextStyle(fontSize: 12)),
+        subtitle: Text(themeDesc, style: const TextStyle(fontSize: 12)),
         leading: Container(
           width: 50,
           height: 50,
           decoration: BoxDecoration(
-            color: theme.boardColor,
+            color: boardColor,
             borderRadius: BorderRadius.circular(8),
             border: Border.all(color: Colors.black, width: 2),
           ),
@@ -335,7 +340,7 @@ class SettingsScreen extends StatelessWidget {
                 height: 15,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: theme.player1Color,
+                  color: player1Color,
                   border: Border.all(color: Colors.black),
                 ),
               ),
@@ -344,7 +349,7 @@ class SettingsScreen extends StatelessWidget {
                 height: 15,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: theme.player2Color,
+                  color: player2Color,
                   border: Border.all(color: Colors.black),
                 ),
               ),
@@ -354,9 +359,9 @@ class SettingsScreen extends StatelessWidget {
         onTap: () {
           profile.updateTheme(
             theme: key,
-            board: theme.boardColor,
-            player1: theme.player1Color,
-            player2: theme.player2Color,
+            board: boardColor,
+            player1: player1Color,
+            player2: player2Color,
           );
           SoundService.playClick();
           Navigator.pop(context);
