@@ -1,11 +1,11 @@
 {
-    "name": "TokerrGjiks - Strategic Board Game",
+    "name": "TokerrGjiks - Lojë strategjike tradicionale",
     "short_name": "TokerrGjiks",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#1a1a2e",
     "theme_color": "#16213e",
-    "description": "TokerrGjiks - A strategic board game with multiplayer support",
+    "description": "TokerrGjiks - Lojë strategjike tradicionale për disa lojtarë",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

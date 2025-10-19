@@ -19,9 +19,9 @@ class UserProfile extends ChangeNotifier {
   
   // Customization
   String _boardTheme = 'classic'; // classic, modern, dark, custom
-  Color _player1Color = Colors.red;
-  Color _player2Color = Colors.blue;
-  Color _boardColor = const Color(0xFFD4A574); // Yellow/tan board
+  Color _player1Color = const Color(0xFFFFF8DC); // Cream - visible on all themes
+  Color _player2Color = Colors.black87;
+  Color _boardColor = const Color(0xFFDAA520); // Gold board (classic theme)
   
   // Settings
   bool _soundEnabled = true;
@@ -80,9 +80,9 @@ class UserProfile extends ChangeNotifier {
     _consecutiveLogins = prefs.getInt('consecutiveLogins') ?? 0;
     
     _boardTheme = prefs.getString('boardTheme') ?? 'classic';
-    _player1Color = Color(prefs.getInt('player1Color') ?? Colors.red.value);
-    _player2Color = Color(prefs.getInt('player2Color') ?? Colors.blue.value);
-    _boardColor = Color(prefs.getInt('boardColor') ?? const Color(0xFFD4A574).value);
+    _player1Color = Color(prefs.getInt('player1Color') ?? const Color(0xFFFFF8DC).value);
+    _player2Color = Color(prefs.getInt('player2Color') ?? Colors.black87.value);
+    _boardColor = Color(prefs.getInt('boardColor') ?? const Color(0xFFDAA520).value);
     
     _soundEnabled = prefs.getBool('soundEnabled') ?? true;
     _musicEnabled = prefs.getBool('musicEnabled') ?? true;

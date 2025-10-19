@@ -9,6 +9,7 @@ import 'package:tokerrgjik_mobile/services/storage_service.dart';
 import 'package:tokerrgjik_mobile/services/database_service.dart';
 import 'package:tokerrgjik_mobile/services/chat_service.dart';
 import 'package:tokerrgjik_mobile/services/sentry_service.dart';
+import 'package:tokerrgjik_mobile/services/notification_service.dart';
 import 'screens/home_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/shop_screen.dart';
@@ -49,6 +50,14 @@ void main() async {
     print('Ad service initialized successfully');
   } catch (e) {
     print('Ad initialization error: $e');
+  }
+  
+  try {
+    // Initialize notifications for player turn alerts
+    await NotificationService.initialize();
+    print('Notification service initialized successfully');
+  } catch (e) {
+    print('Notification initialization error: $e');
   }
   
       // Initialize sound service

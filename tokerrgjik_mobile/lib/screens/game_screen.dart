@@ -4,6 +4,7 @@ import '../models/game_model.dart';
 import '../models/user_profile.dart';
 import '../widgets/game_board.dart';
 import '../services/sound_service.dart';
+import '../services/notification_service.dart';
 
 class GameScreen extends StatefulWidget {
   final String? mode;
@@ -17,9 +18,6 @@ class GameScreen extends StatefulWidget {
 
 class _GameScreenState extends State<GameScreen> {
   late GameModel game;
-  Color? customBoardColor;
-  Color? customPlayer1Color;
-  Color? customPlayer2Color;
 
   @override
   void initState() {
@@ -51,6 +49,7 @@ class _GameScreenState extends State<GameScreen> {
           // Player must remove an opponent's piece - don't trigger AI yet
         } else if (!game.checkWinCondition()) {
           // Turn automatically switched in placePiece() - trigger AI if needed
+          _notifyTurnChange();
           _makeAIMoveIfNeeded();
         }
       } else if (game.phase == 'moving') {
@@ -85,6 +84,7 @@ class _GameScreenState extends State<GameScreen> {
                 // Player must remove an opponent's piece - don't trigger AI yet
               } else if (!game.checkWinCondition()) {
                 // Turn automatically switched in movePiece() - trigger AI if needed
+                _notifyTurnChange();
                 _makeAIMoveIfNeeded();
               }
             } else {
@@ -104,6 +104,7 @@ class _GameScreenState extends State<GameScreen> {
           SoundService.playRemovePiece();
           if (!game.checkWinCondition()) {
             // Turn automatically switched in removePiece() - trigger AI if needed
+            _notifyTurnChange();
             _makeAIMoveIfNeeded();
           }
         }
@@ -117,8 +118,22 @@ class _GameScreenState extends State<GameScreen> {
     });
   }
 
+  void _notifyTurnChange() {
+    // Notify when turn changes
+    if (game.aiEnabled && game.currentPlayer != game.aiPlayer) {
+      // AI just finished, notify human player
+      NotificationService.notifyPlayerTurn(game.currentPlayer, isAI: true);
+    } else if (!game.aiEnabled) {
+      // Local multiplayer - notify whose turn it is
+      NotificationService.notifyPlayerTurn(game.currentPlayer);
+    }
+  }
+
   void _makeAIMoveIfNeeded() {
     if (game.aiEnabled && game.currentPlayer == game.aiPlayer) {
+      // Show AI thinking notification
+      NotificationService.notifyAIThinking();
+      
       // Add timeout protection - max 3 seconds for AI to make a move
       Future.delayed(const Duration(milliseconds: 500), () {
         if (!mounted) return;
@@ -143,6 +158,9 @@ class _GameScreenState extends State<GameScreen> {
             game.makeAIMove();
             moveCompleted = true;
             
+            // Cancel AI thinking notification
+            NotificationService.cancelAIThinking();
+            
             // If AI formed a mill during placement/moving, it needs to remove a piece
             // The phase will be 'removing' and currentPlayer will still be the AI
             if (game.phase == 'removing' && game.currentPlayer == game.aiPlayer) {
@@ -152,9 +170,13 @@ class _GameScreenState extends State<GameScreen> {
                     game.makeAIMove(); // AI removes opponent's piece
                     // removePiece() already switches player, don't switch again
                     // Just check for win condition
+                    NotificationService.cancelAIThinking();
                     if (game.checkWinCondition()) {
                       SoundService.playWin();
                       _showWinDialog();
+                    } else {
+                      // Notify human player it's their turn
+                      NotificationService.notifyPlayerTurn(game.currentPlayer, isAI: true);
                     }
                   });
                 }
@@ -163,11 +185,15 @@ class _GameScreenState extends State<GameScreen> {
               // Check for win after AI's move
               SoundService.playWin();
               _showWinDialog();
+            } else {
+              // Notify human player it's their turn
+              NotificationService.notifyPlayerTurn(game.currentPlayer, isAI: true);
             }
           } catch (e) {
             // If AI move fails, switch to player
             print('AI move error: $e');
             game.switchPlayer();
+            NotificationService.cancelAIThinking();
           }
         });
       });
@@ -233,153 +259,6 @@ class _GameScreenState extends State<GameScreen> {
     );
   }
 
-  void _showThemeDialog() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        final profile = Provider.of<UserProfile>(context, listen: false);
-        return AlertDialog(
-          title: const Text('🎨 Zgjedh temën'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _themeOption(
-                  '✨ Klasike (Ari)', 
-                  const Color(0xFFDAA520), // Gold
-                  Colors.white, 
-                  Colors.black,
-                  '3D golden board with classic colors',
-                ),
-                const Divider(),
-                _themeOption(
-                  '🌙 E errët', 
-                  Colors.grey.shade800, 
-                  Colors.white, 
-                  const Color(0xFFFFD700), // Bright gold
-                  'Dark board with bright pieces',
-                ),
-                const Divider(),
-                _themeOption(
-                  '🌲 Natyrore', 
-                  const Color(0xFF8B4513), // Saddle brown
-                  Colors.white, 
-                  const Color(0xFF228B22), // Forest green
-                  'Natural wood colors',
-                ),
-                const Divider(),
-                _themeOption(
-                  '🌊 Oqean', 
-                  const Color(0xFF1E90FF), // Dodger blue
-                  Colors.white, 
-                  const Color(0xFF006994), // Darker blue
-                  'Ocean blue theme',
-                ),
-                const Divider(),
-                _themeOption(
-                  '� Ametist', 
-                  const Color(0xFF9966CC), // Amethyst
-                  Colors.white, 
-                  const Color(0xFF4B0082), // Indigo
-                  'Purple gem theme',
-                ),
-                const Divider(),
-                _themeOption(
-                  '🌸 Rozë', 
-                  const Color(0xFFFF1493), // Deep pink
-                  Colors.white, 
-                  const Color(0xFF9370DB), // Medium purple
-                  'Pink and purple theme',
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Mbyll'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _themeOption(String name, Color? board, Color? p1, Color? p2, String description) {
-    bool isSelected = customBoardColor == board;
-    return Container(
-      decoration: BoxDecoration(
-        color: isSelected ? Colors.blue.withOpacity(0.1) : null,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: ListTile(
-        title: Text(
-          name,
-          style: TextStyle(
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-          ),
-        ),
-        subtitle: Text(
-          description,
-          style: const TextStyle(fontSize: 11, color: Colors.grey),
-        ),
-        leading: Container(
-          width: 50,
-          height: 50,
-          decoration: BoxDecoration(
-            gradient: RadialGradient(
-              colors: [
-                board?.withOpacity(0.8) ?? const Color(0xFFD4A574),
-                board ?? const Color(0xFFD4A574),
-              ],
-            ),
-            border: Border.all(color: Colors.black, width: 2),
-            borderRadius: BorderRadius.circular(8),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.3),
-                blurRadius: 5,
-                offset: const Offset(2, 2),
-              ),
-            ],
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              Container(
-                width: 12,
-                height: 12,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: p1 ?? Colors.white,
-                  border: Border.all(color: Colors.black),
-                ),
-              ),
-              Container(
-                width: 12,
-                height: 12,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: p2 ?? Colors.black87,
-                  border: Border.all(color: Colors.black),
-                ),
-              ),
-            ],
-          ),
-        ),
-        trailing: isSelected ? const Icon(Icons.check, color: Colors.blue) : null,
-        onTap: () {
-          setState(() {
-            customBoardColor = board;
-            customPlayer1Color = p1;
-            customPlayer2Color = p2;
-          });
-          Navigator.pop(context);
-          SoundService.playClick();
-        },
-      ),
-    );
-  }
 
   void _showWinDialog() {
     // checkWinCondition() returns true when the OPPONENT of currentPlayer has lost
@@ -494,6 +373,9 @@ class _GameScreenState extends State<GameScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Get user profile for theme colors
+    final profile = Provider.of<UserProfile>(context);
+    
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -523,7 +405,7 @@ class _GameScreenState extends State<GameScreen> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              customBoardColor ?? const Color(0xFF667eea),
+              profile.boardColor,
               Colors.white,
             ],
             stops: const [0.0, 0.3],
@@ -591,9 +473,9 @@ class _GameScreenState extends State<GameScreen> {
                       child: GameBoard(
                         game: game,
                         onPositionTap: handlePositionTap,
-                        boardColor: customBoardColor,
-                        player1Color: customPlayer1Color,
-                        player2Color: customPlayer2Color,
+                        boardColor: profile.boardColor,
+                        player1Color: profile.player1Color,
+                        player2Color: profile.player2Color,
                       ),
                     ),
                   ),
@@ -686,6 +568,7 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   Widget _buildPlayerInfo(int player) {
+    final profile = Provider.of<UserProfile>(context, listen: false);
     bool isActive = game.currentPlayer == player;
     bool isAI = game.aiEnabled && player == game.aiPlayer;
     int piecesCount = game.piecesLeft[player]! > 0
@@ -716,8 +599,8 @@ class _GameScreenState extends State<GameScreen> {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: player == 1 
-                  ? (customPlayer1Color ?? const Color(0xFFFFF8DC)) // Cream color
-                  : (customPlayer2Color ?? Colors.black87),
+                  ? profile.player1Color
+                  : profile.player2Color,
               border: Border.all(color: Colors.black87, width: 2),
             ),
           ),
