@@ -1,12 +1,13 @@
 [build]
-  base = "tokerrgjik_mobile"
-  command = "flutter build web --release --web-renderer canvaskit"
+  # No build command - we'll push pre-built files
+  # Build locally with: cd tokerrgjik_mobile && flutter build web --release
+  command = "echo 'Using pre-built Flutter web files'"
   publish = "tokerrgjik_mobile/build/web"
   functions = "netlify/functions"
 
 [build.environment]
-  # Flutter version
-  FLUTTER_VERSION = "3.35.6"
+  # Not needed since we're using pre-built files
+  NODE_VERSION = "18"
 
 # API redirects
 [[redirects]]

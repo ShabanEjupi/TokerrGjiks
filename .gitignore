@@ -8,7 +8,12 @@ package-lock.json
 # Flutter/Dart
 tokerrgjik_mobile/.dart_tool/
 tokerrgjik_mobile/.packages
-tokerrgjik_mobile/build/
+# Keep build/web for Netlify deployment
+tokerrgjik_mobile/build/android/
+tokerrgjik_mobile/build/ios/
+tokerrgjik_mobile/build/linux/
+tokerrgjik_mobile/build/macos/
+tokerrgjik_mobile/build/windows/
 tokerrgjik_mobile/.flutter-plugins
 tokerrgjik_mobile/.flutter-plugins-dependencies
 tokerrgjik_mobile/.pub-cache/
