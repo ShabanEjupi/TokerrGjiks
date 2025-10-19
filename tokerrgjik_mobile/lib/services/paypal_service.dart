@@ -143,25 +143,41 @@ class PayPalService {
     );
     
     try {
-      final orderId = await createOrder(
+      final orderData = await createOrder(
         amount: amount,
         currency: 'EUR',
         description: description,
       );
       
-      if (orderId != null) {
-        // In web, open PayPal checkout in new window
-        if (kIsWeb) {
-          // Get approval URL
-          final approvalUrl = '$_apiUrl/checkoutnow?token=$orderId';
-          // Open PayPal checkout (implement with url_launcher or window.open)
-          Navigator.pop(context); // Close loading
+      if (orderData != null && orderData['approval_url'] != null) {
+        Navigator.pop(context); // Close loading dialog
+        
+        // Open PayPal checkout page
+        final approvalUrl = orderData['approval_url'];
+        final uri = Uri.parse(approvalUrl);
+        
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(
+            uri,
+            mode: LaunchMode.externalApplication,
+          );
+          
+          // Show message
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('PayPal checkout opened. Complete payment in browser.'),
+                duration: Duration(seconds: 5),
+              ),
+            );
+          }
+          
           return true;
         } else {
-          // For mobile, implement PayPal SDK or webview
-          Navigator.pop(context);
-          return true;
+          print('Could not launch PayPal URL: $approvalUrl');
         }
+      } else {
+        print('No approval URL received from PayPal');
       }
     } catch (e) {
       print('Error purchasing PRO: $e');

@@ -4,6 +4,7 @@ import 'package:confetti/confetti.dart';
 import '../models/user_profile.dart';
 import '../services/sound_service.dart';
 import 'game_screen.dart';
+import 'multiplayer_lobby_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -284,10 +285,11 @@ class _HomeScreenState extends State<HomeScreen> {
             colors: [Colors.orange, Colors.deepOrange],
           ),
           onPressed: () {
+            // Navigate to multiplayer lobby instead of directly to game
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => const GameScreen(mode: 'online'),
+                builder: (context) => const MultiplayerLobbyScreen(),
               ),
             );
             SoundService.playClick();

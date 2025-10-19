@@ -14,6 +14,30 @@ class AuthService {
   static String? _authToken;
   static String? _currentUsername;
   
+  // Fun random username adjectives and nouns for auto-generated names
+  static const List<String> _adjectives = [
+    'Swift', 'Clever', 'Mighty', 'Bold', 'Quick', 'Sharp', 'Brave', 'Smart',
+    'Wise', 'Calm', 'Epic', 'Super', 'Ultra', 'Mega', 'Alpha', 'Prime',
+    'Elite', 'Royal', 'Golden', 'Silver', 'Crystal', 'Shadow', 'Turbo', 'Speedy',
+    'Lucky', 'Happy', 'Sunny', 'Bright', 'Cool', 'Rad', 'Epic', 'Legendary',
+  ];
+  
+  static const List<String> _nouns = [
+    'Tiger', 'Eagle', 'Dragon', 'Phoenix', 'Wolf', 'Lion', 'Falcon', 'Hawk',
+    'Panther', 'Bear', 'Fox', 'Shark', 'Ninja', 'Knight', 'Wizard', 'Warrior',
+    'Hunter', 'Champion', 'Master', 'Legend', 'Hero', 'Star', 'Thunder', 'Storm',
+    'Racer', 'Gamer', 'Pro', 'Ace', 'King', 'Queen', 'Chief', 'Boss',
+  ];
+  
+  /// Generate a fun random username
+  static String generateRandomUsername() {
+    final random = Random();
+    final adjective = _adjectives[random.nextInt(_adjectives.length)];
+    final noun = _nouns[random.nextInt(_nouns.length)];
+    final number = random.nextInt(999);
+    return '$adjective$noun$number';
+  }
+  
   /// Register new user
   static Future<Map<String, dynamic>?> register({
     required String username,
@@ -117,7 +141,7 @@ class AuthService {
   /// Guest login (no account needed)
   static Future<Map<String, dynamic>> loginAsGuest() async {
     final guestId = 'guest_${Random().nextInt(999999)}';
-    final guestName = 'Guest_${Random().nextInt(9999)}';
+    final guestName = generateRandomUsername(); // Use fun random name instead of "Guest_XXXX"
     
     _currentUserId = guestId;
     _currentUsername = guestName;
@@ -174,6 +198,13 @@ class AuthService {
   
   /// Get current username
   static String? get currentUsername => _currentUsername;
+  
+  /// Set current username (for profile updates)
+  static Future<void> updateUsername(String newUsername) async {
+    _currentUsername = newUsername;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('username', newUsername);
+  }
   
   /// Get auth token for API calls
   static String? get authToken => _authToken;

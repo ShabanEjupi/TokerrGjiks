@@ -88,11 +88,9 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
           fullName: fullName.isNotEmpty ? fullName : null,
         );
 
-        if (result['success'] == true) {
-          // Update local auth
-          AuthService._currentUsername = newUsername;
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setString('username', newUsername);
+        if (result != null && result['success'] == true) {
+          // Update local auth with new username
+          await AuthService.updateUsername(newUsername);
 
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
@@ -104,7 +102,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
             Navigator.pop(context, true); // Return true to indicate success
           }
         } else {
-          throw Exception(result['message'] ?? 'Update failed');
+          throw Exception(result?['message'] ?? 'Update failed');
         }
       }
     } catch (e) {

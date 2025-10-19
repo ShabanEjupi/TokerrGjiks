@@ -1,7 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import '../services/multiplayer_service.dart';
+import '../services/api_service.dart';
 import '../services/auth_service.dart';
+import '../services/sound_service.dart';
 import 'game_screen.dart';
 
 /// Multiplayer Lobby Screen
@@ -14,9 +15,6 @@ class MultiplayerLobbyScreen extends StatefulWidget {
 }
 
 class _MultiplayerLobbyScreenState extends State<MultiplayerLobbyScreen> {
-  final MultiplayerService _multiplayerService = SimpleMultiplayerService();
-  final AuthService _authService = AuthService();
-  
   List<Map<String, dynamic>> _availableSessions = [];
   bool _isLoading = true;
   bool _isCreatingSession = false;
@@ -36,9 +34,8 @@ class _MultiplayerLobbyScreenState extends State<MultiplayerLobbyScreen> {
   }
 
   Future<void> _initializeScreen() async {
-    final user = await _authService.getCurrentUser();
     setState(() {
-      _currentUsername = user?.username;
+      _currentUsername = AuthService.currentUsername;
     });
     
     await _loadAvailableSessions();
@@ -51,7 +48,7 @@ class _MultiplayerLobbyScreenState extends State<MultiplayerLobbyScreen> {
 
   Future<void> _loadAvailableSessions() async {
     try {
-      final sessions = await _multiplayerService.getAvailableSessions();
+      final sessions = await ApiService.getActiveSessions();
       if (mounted) {
         setState(() {
           _availableSessions = sessions;
@@ -79,9 +76,11 @@ class _MultiplayerLobbyScreenState extends State<MultiplayerLobbyScreen> {
     });
 
     try {
-      final sessionId = await _multiplayerService.createSession(_currentUsername!);
+      final result = await ApiService.createGameSession(
+        hostUsername: _currentUsername!,
+      );
       
-      if (mounted) {
+      if (result != null && result['session_id'] != null && mounted) {
         setState(() {
           _isCreatingSession = false;
         });
@@ -89,12 +88,13 @@ class _MultiplayerLobbyScreenState extends State<MultiplayerLobbyScreen> {
         // Navigate to game screen as host
         Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (context) => GameScreen(
-              gameMode: 'multiplayer',
-              sessionId: sessionId,
+            builder: (context) => const GameScreen(
+              mode: 'online',
             ),
           ),
         );
+      } else {
+        throw Exception('Failed to create session');
       }
     } catch (e) {
       print('Error creating session: $e');
@@ -119,15 +119,14 @@ class _MultiplayerLobbyScreenState extends State<MultiplayerLobbyScreen> {
     }
 
     try {
-      final success = await _multiplayerService.joinSession(sessionId, _currentUsername!);
+      final result = await ApiService.joinGameSession(sessionId, _currentUsername!);
       
-      if (success && mounted) {
+      if (result != null && mounted) {
         // Navigate to game screen as guest
         Navigator.of(context).push(
           MaterialPageRoute(
-            builder: (context) => GameScreen(
-              gameMode: 'multiplayer',
-              sessionId: sessionId,
+            builder: (context) => const GameScreen(
+              mode: 'online',
             ),
           ),
         );
