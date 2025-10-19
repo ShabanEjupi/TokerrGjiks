@@ -301,7 +301,7 @@ class SettingsScreen extends StatelessWidget {
     );
   }
   
-  Widget _themeOptionNew(BuildContext context, String key, ThemeData theme, UserProfile profile) {
+  Widget _themeOptionNew(BuildContext context, String key, GameTheme theme, UserProfile profile) {
     bool isSelected = profile.boardTheme == key;
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 4),

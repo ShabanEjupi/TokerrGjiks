@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 /// Single source of truth for all theme-related constants
 class AppThemes {
   // Theme definitions with consistent naming
-  static const Map<String, ThemeData> themes = {
-    'classic': ThemeData(
+  static const Map<String, GameTheme> themes = {
+    'classic': GameTheme(
       name: '✨ Klasike (Ari)',
       nameShort: 'Klasike',
       boardColor: Color(0xFFDAA520), // Gold
@@ -13,7 +13,7 @@ class AppThemes {
       player2Color: Colors.black87,
       description: 'Tabelë e artë 3D me ngjyra klasike',
     ),
-    'dark': ThemeData(
+    'dark': GameTheme(
       name: '🌙 E errët',
       nameShort: 'E errët',
       boardColor: Color(0xFF424242), // Dark grey
@@ -21,7 +21,7 @@ class AppThemes {
       player2Color: Color(0xFFFFD700), // Bright gold
       description: 'Tabelë e errët me figura të ndritshme',
     ),
-    'nature': ThemeData(
+    'nature': GameTheme(
       name: '🌲 Natyrore',
       nameShort: 'Natyrore',
       boardColor: Color(0xFF8B4513), // Saddle brown
@@ -29,7 +29,7 @@ class AppThemes {
       player2Color: Color(0xFF228B22), // Forest green
       description: 'Ngjyra druri natyror',
     ),
-    'ocean': ThemeData(
+    'ocean': GameTheme(
       name: '🌊 Oqean',
       nameShort: 'Oqean',
       boardColor: Color(0xFF1E90FF), // Dodger blue
@@ -37,7 +37,7 @@ class AppThemes {
       player2Color: Color(0xFF006994), // Darker blue
       description: 'Temë blu oqeani',
     ),
-    'amethyst': ThemeData(
+    'amethyst': GameTheme(
       name: '💎 Ametist',
       nameShort: 'Ametist',
       boardColor: Color(0xFF9966CC), // Amethyst
@@ -45,7 +45,7 @@ class AppThemes {
       player2Color: Color(0xFF4B0082), // Indigo
       description: 'Temë gurësh të çmuar vjollcë',
     ),
-    'rose': ThemeData(
+    'rose': GameTheme(
       name: '🌸 Rozë',
       nameShort: 'Rozë',
       boardColor: Color(0xFFFF1493), // Deep pink
@@ -56,7 +56,7 @@ class AppThemes {
   };
 
   /// Get theme data by key
-  static ThemeData getTheme(String key) {
+  static GameTheme getTheme(String key) {
     return themes[key] ?? themes['classic']!;
   }
 
@@ -79,8 +79,8 @@ class AppThemes {
   }
 }
 
-/// Theme data class
-class ThemeData {
+/// Game theme data class (renamed to avoid conflict with Flutter's ThemeData)
+class GameTheme {
   final String name;
   final String nameShort;
   final Color boardColor;
@@ -88,7 +88,7 @@ class ThemeData {
   final Color player2Color;
   final String description;
 
-  const ThemeData({
+  const GameTheme({
     required this.name,
     required this.nameShort,
     required this.boardColor,
