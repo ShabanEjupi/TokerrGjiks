@@ -104,20 +104,33 @@ Set these in your Netlify dashboard under Site Settings → Environment Variable
 
 ## 🐛 Troubleshooting
 
+### AdSense 400 errors in console
+- **Cause**: Google Mobile Ads don't work on web, only on mobile apps
+- **Solution**: Already fixed - removed invalid AdSense code from web/index.html
+- **Note**: Ads will work when you build Android/iOS apps
+
 ### Functions are crashing
 - **Cause**: Database environment variable not set
 - **Solution**: Add `NETLIFY_DATABASE_URL` in Netlify dashboard, then redeploy
 
 ### PayPal not opening
-- **Cause**: Missing PayPal credentials
-- **Solution**: Add credentials to `payment_config.dart` and rebuild: `flutter build web --release`
+- **Cause**: Missing PayPal credentials or old cached build
+- **Solution**: 
+  1. Add credentials to `payment_config.dart` 
+  2. Hard refresh browser (Ctrl+Shift+R)
+  3. Clear browser cache if needed
 
 ### Leaderboard is blank
 - **Cause**: Database tables don't exist
 - **Solution**: Run the database schema SQL in Neon console
 
-### Username stuck as "Player_1234"
+### Username stuck as "Player" or weird random name
 - **Solution**: Go to Profile → Edit Profile → Change your username
+- **Note**: New users get fun random names like "SwiftTiger123" or "BraveDragon456" instead of boring "Player_1234"
+
+### Can't find multiplayer games
+- **Solution**: Click "Luaj online" button to open the multiplayer lobby
+- **Tip**: Lobby auto-refreshes every 5 seconds to show new games
 
 ## 📱 Platforms
 
