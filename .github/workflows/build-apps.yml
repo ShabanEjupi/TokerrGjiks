@@ -1,177 +1,351 @@
-name: Build Android & iOS Apps
+name: Build Android & iOS Appsname: Build Android & iOS Apps
 
-on:
-  push:
-    branches: [ main ]
-    tags:
-      - 'v*'
-  pull_request:
-    branches: [ main ]
-  workflow_dispatch:  # Allow manual trigger
 
-jobs:
-  build-android:
-    name: Build Android APK/AAB
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      
-      - name: Setup Java
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '17'
-          cache: 'gradle'
-      
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.35.6'
-          channel: 'stable'
-          cache: true
-      
-      - name: Generate API keys
-        env:
-          ADMOB_APP_ID_ANDROID: ${{ secrets.ADMOB_APP_ID_ANDROID }}
-          ADMOB_APP_ID_IOS: ${{ secrets.ADMOB_APP_ID_IOS }}
-          ADMOB_BANNER_ANDROID: ${{ secrets.ADMOB_BANNER_ANDROID }}
-          ADMOB_BANNER_IOS: ${{ secrets.ADMOB_BANNER_IOS }}
-          ADMOB_INTERSTITIAL_ANDROID: ${{ secrets.ADMOB_INTERSTITIAL_ANDROID }}
-          ADMOB_INTERSTITIAL_IOS: ${{ secrets.ADMOB_INTERSTITIAL_IOS }}
-          ADMOB_REWARDED_ANDROID: ${{ secrets.ADMOB_REWARDED_ANDROID }}
-          ADMOB_REWARDED_IOS: ${{ secrets.ADMOB_REWARDED_IOS }}
-        run: |
-          CI=true bash scripts/generate_api_keys.sh
-      
-      - name: Get dependencies
-        working-directory: tokerrgjik_mobile
-        run: flutter pub get
-      
-      - name: Build APK (Release)
-        working-directory: tokerrgjik_mobile
-        run: flutter build apk --release --split-per-abi
-      
-      - name: Build App Bundle (Release)
-        working-directory: tokerrgjik_mobile
-        run: flutter build appbundle --release
-      
-      - name: Upload APK artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: android-apks
-          path: |
+
+on:on:
+
+  push:  push:
+
+    branches: [ main ]    branches: [ main ]
+
+    tags:    tags:
+
+      - 'v*'      - 'v*'
+
+  pull_request:  pull_request:
+
+    branches: [ main ]    branches: [ main ]
+
+  workflow_dispatch:  # Allow manual trigger  workflow_dispatch:  # Allow manual trigger
+
+
+
+jobs:jobs:
+
+  build-android:  build-android:
+
+    name: Build Android APK/AAB    name: Build Android APK/AAB
+
+    runs-on: ubuntu-latest    runs-on: ubuntu-latest
+
+        
+
+    steps:    steps:
+
+      - name: Checkout repository      - name: Checkout repository
+
+        uses: actions/checkout@v4        uses: actions/checkout@v4
+
+            
+
+      - name: Setup Java      - name: Setup Java
+
+        uses: actions/setup-java@v4        uses: actions/setup-java@v4
+
+        with:        with:
+
+          distribution: 'temurin'          distribution: 'temurin'
+
+          java-version: '17'          java-version: '17'
+
+          cache: 'gradle'          cache: 'gradle'
+
+            
+
+      - name: Setup Flutter      - name: Setup Flutter
+
+        uses: subosito/flutter-action@v2        uses: subosito/flutter-action@v2
+
+        with:        with:
+
+          flutter-version: '3.35.6'          flutter-version: '3.35.6'
+
+          channel: 'stable'          channel: 'stable'
+
+          cache: true          cache: true
+
+            
+
+      - name: Generate API keys      - name: Generate API keys
+
+        working-directory: tokerrgjik_mobile        env:
+
+        run: |          ADMOB_APP_ID_ANDROID: ${{ secrets.ADMOB_APP_ID_ANDROID }}
+
+          # Copy template file to actual config          ADMOB_APP_ID_IOS: ${{ secrets.ADMOB_APP_ID_IOS }}
+
+          cp lib/config/api_keys.dart.template lib/config/api_keys.dart          ADMOB_BANNER_ANDROID: ${{ secrets.ADMOB_BANNER_ANDROID }}
+
+          echo "✅ API keys generated from template"          ADMOB_BANNER_IOS: ${{ secrets.ADMOB_BANNER_IOS }}
+
+                ADMOB_INTERSTITIAL_ANDROID: ${{ secrets.ADMOB_INTERSTITIAL_ANDROID }}
+
+      - name: Get dependencies          ADMOB_INTERSTITIAL_IOS: ${{ secrets.ADMOB_INTERSTITIAL_IOS }}
+
+        working-directory: tokerrgjik_mobile          ADMOB_REWARDED_ANDROID: ${{ secrets.ADMOB_REWARDED_ANDROID }}
+
+        run: flutter pub get          ADMOB_REWARDED_IOS: ${{ secrets.ADMOB_REWARDED_IOS }}
+
+              run: |
+
+      - name: Build APK (Release)          CI=true bash scripts/generate_api_keys.sh
+
+        working-directory: tokerrgjik_mobile      
+
+        run: flutter build apk --release --split-per-abi      - name: Get dependencies
+
+              working-directory: tokerrgjik_mobile
+
+      - name: Build App Bundle (Release)        run: flutter pub get
+
+        working-directory: tokerrgjik_mobile      
+
+        run: flutter build appbundle --release      - name: Build APK (Release)
+
+              working-directory: tokerrgjik_mobile
+
+      - name: Upload APK artifacts        run: flutter build apk --release --split-per-abi
+
+        uses: actions/upload-artifact@v4      
+
+        with:      - name: Build App Bundle (Release)
+
+          name: android-apks        working-directory: tokerrgjik_mobile
+
+          path: |        run: flutter build appbundle --release
+
+            tokerrgjik_mobile/build/app/outputs/flutter-apk/*.apk      
+
+          retention-days: 90      - name: Upload APK artifacts
+
+              uses: actions/upload-artifact@v4
+
+      - name: Upload AAB artifacts        with:
+
+        uses: actions/upload-artifact@v4          name: android-apks
+
+        with:          path: |
+
+          name: android-aab            tokerrgjik_mobile/build/app/outputs/flutter-apk/*.apk
+
+          path: |          retention-days: 90
+
+            tokerrgjik_mobile/build/app/outputs/bundle/release/*.aab      
+
+          retention-days: 90      - name: Upload AAB artifacts
+
+              uses: actions/upload-artifact@v4
+
+      - name: Create Release (if tag)        with:
+
+        if: startsWith(github.ref, 'refs/tags/v')          name: android-aab
+
+        uses: softprops/action-gh-release@v1          path: |
+
+        with:            tokerrgjik_mobile/build/app/outputs/bundle/release/*.aab
+
+          files: |          retention-days: 90
+
+            tokerrgjik_mobile/build/app/outputs/flutter-apk/*.apk      
+
+            tokerrgjik_mobile/build/app/outputs/bundle/release/*.aab      - name: Create Release (if tag)
+
+          draft: false        if: startsWith(github.ref, 'refs/tags/v')
+
+          prerelease: false        uses: softprops/action-gh-release@v1
+
+        env:        with:
+
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}          files: |
+
             tokerrgjik_mobile/build/app/outputs/flutter-apk/*.apk
-          retention-days: 90
-      
-      - name: Upload AAB artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: android-aab
-          path: |
-            tokerrgjik_mobile/build/app/outputs/bundle/release/*.aab
-          retention-days: 90
-      
-      - name: Create Release (if tag)
-        if: startsWith(github.ref, 'refs/tags/v')
-        uses: softprops/action-gh-release@v1
-        with:
-          files: |
-            tokerrgjik_mobile/build/app/outputs/flutter-apk/*.apk
-            tokerrgjik_mobile/build/app/outputs/bundle/release/*.aab
-          draft: false
-          prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  build-ios:
-    name: Build iOS IPA
-    runs-on: macos-14  # macOS with Apple Silicon
-    
-    steps:
+  build-ios:            tokerrgjik_mobile/build/app/outputs/bundle/release/*.aab
+
+    name: Build iOS IPA          draft: false
+
+    runs-on: macos-14  # macOS with Apple Silicon          prerelease: false
+
+            env:
+
+    steps:          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Checkout repository
-        uses: actions/checkout@v4
-      
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
-          flutter-version: '3.35.6'
-          channel: 'stable'
-          cache: true
-      
-      - name: Generate API keys
-        env:
-          ADMOB_APP_ID_ANDROID: ${{ secrets.ADMOB_APP_ID_ANDROID }}
-          ADMOB_APP_ID_IOS: ${{ secrets.ADMOB_APP_ID_IOS }}
-          ADMOB_BANNER_ANDROID: ${{ secrets.ADMOB_BANNER_ANDROID }}
-          ADMOB_BANNER_IOS: ${{ secrets.ADMOB_BANNER_IOS }}
-          ADMOB_INTERSTITIAL_ANDROID: ${{ secrets.ADMOB_INTERSTITIAL_ANDROID }}
-          ADMOB_INTERSTITIAL_IOS: ${{ secrets.ADMOB_INTERSTITIAL_IOS }}
-          ADMOB_REWARDED_ANDROID: ${{ secrets.ADMOB_REWARDED_ANDROID }}
-          ADMOB_REWARDED_IOS: ${{ secrets.ADMOB_REWARDED_IOS }}
-        run: |
-          CI=true bash scripts/generate_api_keys.sh
-      
-      - name: Get dependencies
-        working-directory: tokerrgjik_mobile
-        run: flutter pub get
-      
-      - name: Build iOS (No Codesign)
-        working-directory: tokerrgjik_mobile
-        run: flutter build ios --release --no-codesign
-      
-      - name: Create IPA
-        working-directory: tokerrgjik_mobile
-        run: |
-          mkdir -p build/ios/ipa
-          cd build/ios/iphoneos
-          mkdir Payload
-          cp -r Runner.app Payload/
-          zip -r ../ipa/Tokerrgjik.ipa Payload/
-          rm -rf Payload
-      
-      - name: Upload IPA artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ios-ipa
+
+        uses: actions/checkout@v4  build-ios:
+
+          name: Build iOS IPA
+
+      - name: Setup Flutter    runs-on: macos-14  # macOS with Apple Silicon
+
+        uses: subosito/flutter-action@v2    
+
+        with:    steps:
+
+          flutter-version: '3.35.6'      - name: Checkout repository
+
+          channel: 'stable'        uses: actions/checkout@v4
+
+          cache: true      
+
+            - name: Setup Flutter
+
+      - name: Generate API keys        uses: subosito/flutter-action@v2
+
+        working-directory: tokerrgjik_mobile        with:
+
+        run: |          flutter-version: '3.35.6'
+
+          # Copy template file to actual config          channel: 'stable'
+
+          cp lib/config/api_keys.dart.template lib/config/api_keys.dart          cache: true
+
+          echo "✅ API keys generated from template"      
+
+            - name: Generate API keys
+
+      - name: Get dependencies        env:
+
+        working-directory: tokerrgjik_mobile          ADMOB_APP_ID_ANDROID: ${{ secrets.ADMOB_APP_ID_ANDROID }}
+
+        run: flutter pub get          ADMOB_APP_ID_IOS: ${{ secrets.ADMOB_APP_ID_IOS }}
+
+                ADMOB_BANNER_ANDROID: ${{ secrets.ADMOB_BANNER_ANDROID }}
+
+      - name: Build iOS (No Codesign)          ADMOB_BANNER_IOS: ${{ secrets.ADMOB_BANNER_IOS }}
+
+        working-directory: tokerrgjik_mobile          ADMOB_INTERSTITIAL_ANDROID: ${{ secrets.ADMOB_INTERSTITIAL_ANDROID }}
+
+        run: flutter build ios --release --no-codesign          ADMOB_INTERSTITIAL_IOS: ${{ secrets.ADMOB_INTERSTITIAL_IOS }}
+
+                ADMOB_REWARDED_ANDROID: ${{ secrets.ADMOB_REWARDED_ANDROID }}
+
+      - name: Create IPA          ADMOB_REWARDED_IOS: ${{ secrets.ADMOB_REWARDED_IOS }}
+
+        working-directory: tokerrgjik_mobile        run: |
+
+        run: |          CI=true bash scripts/generate_api_keys.sh
+
+          mkdir -p build/ios/ipa      
+
+          cd build/ios/iphoneos      - name: Get dependencies
+
+          mkdir Payload        working-directory: tokerrgjik_mobile
+
+          cp -r Runner.app Payload/        run: flutter pub get
+
+          zip -r ../ipa/Tokerrgjik.ipa Payload/      
+
+          rm -rf Payload      - name: Build iOS (No Codesign)
+
+              working-directory: tokerrgjik_mobile
+
+      - name: Upload IPA artifact        run: flutter build ios --release --no-codesign
+
+        uses: actions/upload-artifact@v4      
+
+        with:      - name: Create IPA
+
+          name: ios-ipa        working-directory: tokerrgjik_mobile
+
+          path: tokerrgjik_mobile/build/ios/ipa/*.ipa        run: |
+
+          retention-days: 90          mkdir -p build/ios/ipa
+
+                cd build/ios/iphoneos
+
+      - name: Create Release (if tag)          mkdir Payload
+
+        if: startsWith(github.ref, 'refs/tags/v')          cp -r Runner.app Payload/
+
+        uses: softprops/action-gh-release@v1          zip -r ../ipa/Tokerrgjik.ipa Payload/
+
+        with:          rm -rf Payload
+
+          files: tokerrgjik_mobile/build/ios/ipa/*.ipa      
+
+          draft: false      - name: Upload IPA artifact
+
+          prerelease: false        uses: actions/upload-artifact@v4
+
+        env:        with:
+
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}          name: ios-ipa
+
           path: tokerrgjik_mobile/build/ios/ipa/*.ipa
-          retention-days: 90
-      
-      - name: Create Release (if tag)
-        if: startsWith(github.ref, 'refs/tags/v')
-        uses: softprops/action-gh-release@v1
-        with:
-          files: tokerrgjik_mobile/build/ios/ipa/*.ipa
-          draft: false
-          prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  build-web:
-    name: Build Web Version
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      
-      - name: Setup Flutter
-        uses: subosito/flutter-action@v2
-        with:
+  build-web:          retention-days: 90
+
+    name: Build Web Version      
+
+    runs-on: ubuntu-latest      - name: Create Release (if tag)
+
+            if: startsWith(github.ref, 'refs/tags/v')
+
+    steps:        uses: softprops/action-gh-release@v1
+
+      - name: Checkout repository        with:
+
+        uses: actions/checkout@v4          files: tokerrgjik_mobile/build/ios/ipa/*.ipa
+
+                draft: false
+
+      - name: Setup Flutter          prerelease: false
+
+        uses: subosito/flutter-action@v2        env:
+
+        with:          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
           flutter-version: '3.35.6'
-          channel: 'stable'
-          cache: true
-      
-      - name: Generate API keys
-        env:
-          ADMOB_APP_ID_ANDROID: ${{ secrets.ADMOB_APP_ID_ANDROID }}
-          ADMOB_APP_ID_IOS: ${{ secrets.ADMOB_APP_ID_IOS }}
-          ADMOB_BANNER_ANDROID: ${{ secrets.ADMOB_BANNER_ANDROID }}
-          ADMOB_BANNER_IOS: ${{ secrets.ADMOB_BANNER_IOS }}
-          ADMOB_INTERSTITIAL_ANDROID: ${{ secrets.ADMOB_INTERSTITIAL_ANDROID }}
-          ADMOB_INTERSTITIAL_IOS: ${{ secrets.ADMOB_INTERSTITIAL_IOS }}
-          ADMOB_REWARDED_ANDROID: ${{ secrets.ADMOB_REWARDED_ANDROID }}
+
+          channel: 'stable'  build-web:
+
+          cache: true    name: Build Web Version
+
+          runs-on: ubuntu-latest
+
+      - name: Generate API keys    
+
+        working-directory: tokerrgjik_mobile    steps:
+
+        run: |      - name: Checkout repository
+
+          # Copy template file to actual config        uses: actions/checkout@v4
+
+          cp lib/config/api_keys.dart.template lib/config/api_keys.dart      
+
+          echo "✅ API keys generated from template"      - name: Setup Flutter
+
+              uses: subosito/flutter-action@v2
+
+      - name: Get dependencies        with:
+
+        working-directory: tokerrgjik_mobile          flutter-version: '3.35.6'
+
+        run: flutter pub get          channel: 'stable'
+
+                cache: true
+
+      - name: Build Web      
+
+        working-directory: tokerrgjik_mobile      - name: Generate API keys
+
+        run: flutter build web --release        env:
+
+                ADMOB_APP_ID_ANDROID: ${{ secrets.ADMOB_APP_ID_ANDROID }}
+
+      - name: Upload Web artifacts          ADMOB_APP_ID_IOS: ${{ secrets.ADMOB_APP_ID_IOS }}
+
+        uses: actions/upload-artifact@v4          ADMOB_BANNER_ANDROID: ${{ secrets.ADMOB_BANNER_ANDROID }}
+
+        with:          ADMOB_BANNER_IOS: ${{ secrets.ADMOB_BANNER_IOS }}
+
+          name: web-build          ADMOB_INTERSTITIAL_ANDROID: ${{ secrets.ADMOB_INTERSTITIAL_ANDROID }}
+
+          path: tokerrgjik_mobile/build/web/          ADMOB_INTERSTITIAL_IOS: ${{ secrets.ADMOB_INTERSTITIAL_IOS }}
+
+          retention-days: 90          ADMOB_REWARDED_ANDROID: ${{ secrets.ADMOB_REWARDED_ANDROID }}
+
           ADMOB_REWARDED_IOS: ${{ secrets.ADMOB_REWARDED_IOS }}
         run: |
           CI=true bash scripts/generate_api_keys.sh

@@ -35,8 +35,10 @@ class _HomeScreenState extends State<HomeScreen> {
     final profile = Provider.of<UserProfile>(context, listen: false);
     final now = DateTime.now();
     
+    // Only award bonus if it's a new day
     if (profile.lastLoginDate == null || 
         !_isSameDay(profile.lastLoginDate!, now)) {
+      
       await Future.delayed(const Duration(seconds: 1));
       
       // Determine bonus
@@ -47,6 +49,9 @@ class _HomeScreenState extends State<HomeScreen> {
       } else {
         _loginBonus = 2;
       }
+      
+      // Call checkDailyLogin to update the date and award coins
+      await profile.checkDailyLogin();
       
       setState(() => _showLoginReward = true);
       _confettiController.play();
