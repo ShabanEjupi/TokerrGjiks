@@ -59,18 +59,6 @@ jobs:
         working-directory: tokerrgjik_mobile
         run: flutter pub get
       
-      - name: Fix Android Gradle compileSdk
-        working-directory: tokerrgjik_mobile/android
-        run: |
-          # Add compileSdkVersion fix for package_info_plus plugin
-          # This ensures all subprojects compile with SDK 36
-          if ! grep -q "compileSdkVersion(36)" build.gradle.kts; then
-            sed -i '/afterEvaluate {/a\        compileSdkVersion(36)' build.gradle.kts
-            echo "✅ Added compileSdkVersion(36) to build.gradle.kts"
-          else
-            echo "✅ compileSdkVersion already configured"
-          fi
-      
       - name: Build APK (Release)
         working-directory: tokerrgjik_mobile
         run: flutter build apk --release --split-per-abi

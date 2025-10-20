@@ -178,6 +178,11 @@ class AuthService {
   /// Get current username
   static String? get currentUsername => _currentUsername;
   
+  /// Set current username (for quick updates)
+  static set currentUsername(String? username) {
+    _currentUsername = username;
+  }
+  
   /// Set current username (for profile updates)
   static Future<void> updateUsername(String newUsername) async {
     _currentUsername = newUsername;

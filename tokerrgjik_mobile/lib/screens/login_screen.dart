@@ -38,7 +38,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
     if (!mounted) return;
 
-    if (result['success'] == true) {
+    if (result != null && result['success'] == true) {
       if (_isLoginMode) {
         // Login successful - navigate to home
         Navigator.of(context).pushReplacement(
@@ -57,7 +57,7 @@ class _LoginScreenState extends State<LoginScreen> {
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(result['message'] ?? 'Operation failed'),
+          content: Text(result?['message'] ?? 'Operation failed'),
           backgroundColor: Colors.red,
         ),
       );
