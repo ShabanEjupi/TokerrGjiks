@@ -14,9 +14,11 @@ class SettingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final languageService = Provider.of<LanguageService>(context);
+    
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Cilësimet'),
+        title: Text(languageService.translate('settings_title')),
         backgroundColor: const Color(0xFF667eea),
       ),
       body: Consumer2<UserProfile, LanguageService>(

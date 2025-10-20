@@ -123,11 +123,36 @@ class AuthService {
   
   /// Guest login (no account needed)
   static Future<Map<String, dynamic>> loginAsGuest() async {
+    // Check if guest session already exists
+    final prefs = await SharedPreferences.getInstance();
+    String? existingGuestId = prefs.getString('guest_id');
+    String? existingGuestName = prefs.getString('guest_username');
+    
+    if (existingGuestId != null && existingGuestName != null) {
+      // Reuse existing guest session
+      _currentUserId = existingGuestId;
+      _currentUsername = existingGuestName;
+      _isGuest = true;
+      
+      return {
+        'userId': existingGuestId,
+        'username': existingGuestName,
+        'isGuest': true,
+        'success': true,
+      };
+    }
+    
+    // Create new guest session
     final guestId = 'guest_${Random().nextInt(999999)}';
     final guestName = generateRandomUsername(); // Use fun random name instead of "Guest_XXXX"
     
     _currentUserId = guestId;
     _currentUsername = guestName;
+    _isGuest = true;
+    
+    // Save guest session
+    await prefs.setString('guest_id', guestId);
+    await prefs.setString('guest_username', guestName);
     await _saveAuthLocal();
     
     return {

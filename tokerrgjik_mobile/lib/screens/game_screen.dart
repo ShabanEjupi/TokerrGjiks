@@ -57,7 +57,7 @@ class _GameScreenState extends State<GameScreen> {
           // Award coins for mill if player 1 formed it
           if (game.currentPlayer == 1) {
             _player1Mills++;
-            _awardCoins(2, 'Mill formed! +2 monedha 🎯');
+            _awardCoins(2, 'Dang u formua! +2 monedha 🎯');
           }
           // Player must remove an opponent's piece - don't trigger AI yet
         } else if (!game.checkWinCondition()) {
@@ -97,7 +97,7 @@ class _GameScreenState extends State<GameScreen> {
                 // Award coins for mill if player 1 formed it
                 if (game.currentPlayer == 1) {
                   _player1Mills++;
-                  _awardCoins(2, 'Mill formed! +2 monedha 🎯');
+                  _awardCoins(2, 'Dang u formua! +2 monedha 🎯');
                 }
                 // Player must remove an opponent's piece - don't trigger AI yet
               } else if (!game.checkWinCondition()) {
