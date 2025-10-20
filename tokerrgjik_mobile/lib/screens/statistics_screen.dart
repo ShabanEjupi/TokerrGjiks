@@ -377,21 +377,21 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 ),
                 TextButton(
                   onPressed: () {
-                    // Navigate to achievements screen
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Ekrani i arritjeve vjen së shpejti!'),
-                      ),
-                    );
+                    Navigator.pushNamed(context, '/achievements');
                   },
                   child: const Text('Shiko të gjitha'),
                 ),
               ],
             ),
             const SizedBox(height: 16),
-            const Text(
-              '🏆 Arritje të hapura së shpejti...',
-              style: TextStyle(fontSize: 14, color: Colors.grey),
+            ListTile(
+              leading: const Icon(Icons.emoji_events, color: Color(0xFF667eea), size: 32),
+              title: const Text('Shiko arritjet e tua'),
+              subtitle: const Text('Hap arritje të reja duke luajtur'),
+              trailing: const Icon(Icons.arrow_forward),
+              onTap: () {
+                Navigator.pushNamed(context, '/achievements');
+              },
             ),
           ],
         ),

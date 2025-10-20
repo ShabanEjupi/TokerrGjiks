@@ -20,6 +20,7 @@ import 'screens/shop_screen.dart';
 import 'screens/leaderboard_screen.dart';
 import 'screens/friends_screen.dart';
 import 'screens/statistics_screen.dart';
+import 'screens/achievements_screen.dart';
 
 void main() async {
   // Initialize Sentry first to catch all errors
@@ -145,6 +146,7 @@ class TokerrgjikApp extends StatelessWidget {
           '/leaderboard': (context) => const LeaderboardScreen(),
           '/friends': (context) => const FriendsScreen(),
           '/statistics': (context) => const StatisticsScreen(),
+          '/achievements': (context) => const AchievementsScreen(),
         },
       ),
     );
