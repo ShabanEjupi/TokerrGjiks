@@ -106,8 +106,9 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     }
 
     final profile = Provider.of<UserProfile>(context);
-    final totalGames = profile.wins + profile.losses + profile.draws;
-    final winRate = totalGames > 0 ? (profile.wins / totalGames * 100) : 0.0;
+    final totalGames = profile.totalWins + profile.totalLosses + profile.totalDraws;
+    final winRate = totalGames > 0 ? (profile.totalWins / totalGames * 100) : 0.0;
+    final level = (profile.totalWins / 10).floor() + 1; // Calculate level from wins
 
     return RefreshIndicator(
       onRefresh: _loadStatistics,
@@ -144,7 +145,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
               radius: 50,
               backgroundColor: const Color(0xFF667eea),
               child: Text(
-                '${profile.level}',
+                '$level',
                 style: const TextStyle(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
@@ -162,7 +163,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Niveli ${profile.level}',
+              'Niveli $level',
               style: TextStyle(
                 fontSize: 16,
                 color: Colors.grey[600],
@@ -173,7 +174,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 _buildStatItem('🎮', 'Lojëra', totalGames.toString()),
-                _buildStatItem('🏆', 'Fitore', profile.wins.toString()),
+                _buildStatItem('🏆', 'Fitore', profile.totalWins.toString()),
                 _buildStatItem('📊', 'Win Rate', '${winRate.toStringAsFixed(1)}%'),
               ],
             ),
@@ -231,8 +232,8 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                 PieChartData(
                   sections: [
                     PieChartSectionData(
-                      value: profile.wins.toDouble(),
-                      title: '${profile.wins}',
+                      value: profile.totalWins.toDouble(),
+                      title: '${profile.totalWins}',
                       color: Colors.green,
                       radius: 100,
                       titleStyle: const TextStyle(
@@ -242,8 +243,8 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                       ),
                     ),
                     PieChartSectionData(
-                      value: profile.losses.toDouble(),
-                      title: '${profile.losses}',
+                      value: profile.totalLosses.toDouble(),
+                      title: '${profile.totalLosses}',
                       color: Colors.red,
                       radius: 100,
                       titleStyle: const TextStyle(
@@ -253,8 +254,8 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
                       ),
                     ),
                     PieChartSectionData(
-                      value: profile.draws.toDouble(),
-                      title: '${profile.draws}',
+                      value: profile.totalDraws.toDouble(),
+                      title: '${profile.totalDraws}',
                       color: Colors.orange,
                       radius: 100,
                       titleStyle: const TextStyle(
@@ -273,9 +274,9 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _buildLegendItem(Colors.green, 'Fitore', profile.wins),
-                _buildLegendItem(Colors.red, 'Humbje', profile.losses),
-                _buildLegendItem(Colors.orange, 'Barazime', profile.draws),
+                _buildLegendItem(Colors.green, 'Fitore', profile.totalWins),
+                _buildLegendItem(Colors.red, 'Humbje', profile.totalLosses),
+                _buildLegendItem(Colors.orange, 'Barazime', profile.totalDraws),
               ],
             ),
           ],
@@ -302,6 +303,8 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
   }
 
   Widget _buildGameStatsCard(UserProfile profile) {
+    final level = (profile.totalWins / 10).floor() + 1; // Calculate level
+    
     return Card(
       elevation: 4,
       child: Padding(
@@ -319,13 +322,13 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
             const SizedBox(height: 16),
             _buildStatRow('💰 Monedha', profile.coins.toString()),
             const Divider(),
-            _buildStatRow('🏆 Fitore', profile.wins.toString()),
+            _buildStatRow('🏆 Fitore', profile.totalWins.toString()),
             const Divider(),
-            _buildStatRow('❌ Humbje', profile.losses.toString()),
+            _buildStatRow('❌ Humbje', profile.totalLosses.toString()),
             const Divider(),
-            _buildStatRow('🤝 Barazime', profile.draws.toString()),
+            _buildStatRow('🤝 Barazime', profile.totalDraws.toString()),
             const Divider(),
-            _buildStatRow('⭐ Niveli', profile.level.toString()),
+            _buildStatRow('⭐ Niveli', level.toString()),
             const Divider(),
             _buildStatRow('🎯 Vështirësia', _getDifficultyName(profile.difficulty)),
           ],

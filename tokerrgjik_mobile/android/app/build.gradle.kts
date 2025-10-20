@@ -8,7 +8,7 @@ plugins {
 android {
     namespace = "com.ejupishaban.tokerrgjik"
     compileSdk = 36  // Updated to support latest plugins
-    ndkVersion = flutter.ndkVersion
+    ndkVersion = "27.0.12077973"  // Updated to latest NDK version for plugin compatibility
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17  // Updated from 11 to 17

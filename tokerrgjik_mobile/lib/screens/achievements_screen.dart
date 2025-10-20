@@ -58,21 +58,23 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
   }
 
   bool _checkIfUnlocked(String achievementId, UserProfile profile) {
+    final level = (profile.totalWins / 10).floor() + 1; // Calculate level from wins
+    
     switch (achievementId) {
       case 'first_win':
-        return profile.wins > 0;
+        return profile.totalWins > 0;
       case 'win_streak_5':
         return profile.bestStreak >= 5;
       case 'win_streak_10':
         return profile.bestStreak >= 10;
       case 'games_100':
-        return (profile.wins + profile.losses + profile.draws) >= 100;
+        return (profile.totalWins + profile.totalLosses + profile.totalDraws) >= 100;
       case 'games_500':
-        return (profile.wins + profile.losses + profile.draws) >= 500;
+        return (profile.totalWins + profile.totalLosses + profile.totalDraws) >= 500;
       case 'level_10':
-        return profile.level >= 10;
+        return level >= 10;
       case 'level_50':
-        return profile.level >= 50;
+        return level >= 50;
       case 'pro_member':
         return profile.isPro;
       case 'coins_1000':
@@ -247,24 +249,25 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
 
   double _getAchievementProgress(Achievement achievement) {
     final profile = Provider.of<UserProfile>(context, listen: false);
+    final level = (profile.totalWins / 10).floor() + 1; // Calculate level
     
     switch (achievement.id) {
       case 'first_win':
-        return profile.wins > 0 ? 1.0 : 0.0;
+        return profile.totalWins > 0 ? 1.0 : 0.0;
       case 'win_streak_5':
         return (profile.bestStreak / 5).clamp(0.0, 1.0);
       case 'win_streak_10':
         return (profile.bestStreak / 10).clamp(0.0, 1.0);
       case 'games_100':
-        final total = profile.wins + profile.losses + profile.draws;
+        final total = profile.totalWins + profile.totalLosses + profile.totalDraws;
         return (total / 100).clamp(0.0, 1.0);
       case 'games_500':
-        final total = profile.wins + profile.losses + profile.draws;
+        final total = profile.totalWins + profile.totalLosses + profile.totalDraws;
         return (total / 500).clamp(0.0, 1.0);
       case 'level_10':
-        return (profile.level / 10).clamp(0.0, 1.0);
+        return (level / 10).clamp(0.0, 1.0);
       case 'level_50':
-        return (profile.level / 50).clamp(0.0, 1.0);
+        return (level / 50).clamp(0.0, 1.0);
       case 'pro_member':
         return profile.isPro ? 1.0 : 0.0;
       case 'coins_1000':
@@ -276,24 +279,25 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
 
   String _getProgressText(Achievement achievement) {
     final profile = Provider.of<UserProfile>(context, listen: false);
+    final level = (profile.totalWins / 10).floor() + 1; // Calculate level
     
     switch (achievement.id) {
       case 'first_win':
-        return '${profile.wins} / 1 fitore';
+        return '${profile.totalWins} / 1 fitore';
       case 'win_streak_5':
         return '${profile.bestStreak} / 5 fitore në seri';
       case 'win_streak_10':
         return '${profile.bestStreak} / 10 fitore në seri';
       case 'games_100':
-        final total = profile.wins + profile.losses + profile.draws;
+        final total = profile.totalWins + profile.totalLosses + profile.totalDraws;
         return '$total / 100 lojëra';
       case 'games_500':
-        final total = profile.wins + profile.losses + profile.draws;
+        final total = profile.totalWins + profile.totalLosses + profile.totalDraws;
         return '$total / 500 lojëra';
       case 'level_10':
-        return 'Niveli ${profile.level} / 10';
+        return 'Niveli $level / 10';
       case 'level_50':
-        return 'Niveli ${profile.level} / 50';
+        return 'Niveli $level / 50';
       case 'pro_member':
         return profile.isPro ? 'E hapur' : 'Bli PRO për të hapur';
       case 'coins_1000':
