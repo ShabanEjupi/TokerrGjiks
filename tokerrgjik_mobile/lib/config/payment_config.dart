@@ -3,9 +3,9 @@
 class PaymentConfig {
   // PayPal Configuration
   // TODO: Set these via environment variables or secure storage
-  static String paypalClientId = 'AYR4F9jJJRVDlHihMS_2LDHHyB2f2InhCHRngwbDEvd-FIaEyOptKB3Ijq8xjs3advV3qFrME8qxAzJE'; // Set via terminal
-  static String paypalSecret = 'EAmopBz-iArkJbkjGEWjpdD2f81VtNh_Z6lpk3WTHOQfnLeL0AYLn1LtsLuT3Yb-zTt4ok2wRQnnOM8-'; // Set via terminal
-  static bool useSandbox = true; // Change to false for production
+  static String paypalClientId = 'AbOjnPTlKSYSn9LB3giuWOl7jjz8jK1IQUS4p4Ne9z5_IhPTUKe1XPK00m67oieLNwPLqGOn3OqXZSrt'; // Set via terminal
+  static String paypalSecret = 'EIX2J4bpnNzkXM9hB6y-enX0IOU-XCeB-8AXRZs95Ujf81l60jpTF_fblvVpa0X5nOWqYN31DA6TuXAR'; // Set via terminal
+  static bool useSandbox = false; // Change to false for production
   
   // Payment Packages
   static const Map<String, Map<String, dynamic>> proPackages = {

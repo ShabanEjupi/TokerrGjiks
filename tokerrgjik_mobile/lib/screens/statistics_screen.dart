@@ -116,7 +116,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
         padding: const EdgeInsets.all(16),
         children: [
           // Overview Card
-          _buildOverviewCard(profile, totalGames, winRate),
+          _buildOverviewCard(profile, totalGames, winRate, level),
           const SizedBox(height: 16),
           
           // Win/Loss/Draw Chart
@@ -134,7 +134,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
     );
   }
 
-  Widget _buildOverviewCard(UserProfile profile, int totalGames, double winRate) {
+  Widget _buildOverviewCard(UserProfile profile, int totalGames, double winRate, int level) {
     return Card(
       elevation: 4,
       child: Padding(
