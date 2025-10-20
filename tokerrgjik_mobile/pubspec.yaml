@@ -72,3 +72,7 @@ flutter_launcher_icons:
   adaptive_icon_foreground: "assets/icon.png"
   # iOS specific
   ios_content_mode: scaleAspectFill
+
+# Fix package_info_plus gradle issue
+dependency_overrides:
+  package_info_plus: 8.0.2

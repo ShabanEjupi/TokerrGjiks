@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-/// Developer Information Screen
-/// Shows information about the developer: Shaban Ejupi
+/// Informacioni i Zhvilluesit
+/// Shfaq informacion për zhvilluesin: Shaban Ejupi
 class DeveloperInfoScreen extends StatelessWidget {
   const DeveloperInfoScreen({Key? key}) : super(key: key);
 
@@ -17,8 +17,8 @@ class DeveloperInfoScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Developer Info'),
-        backgroundColor: const Color(0xFF8B4513),
+        title: const Text('Rreth Aplikacionit'),
+        backgroundColor: const Color(0xFF667eea),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -49,48 +49,31 @@ class DeveloperInfoScreen extends StatelessWidget {
                     
                     // Name
                     const Text(
-                      'Shaban Ejupi',
+                      'TokerrGjik',
                       style: TextStyle(
-                        fontSize: 28,
+                        fontSize: 32,
                         fontWeight: FontWeight.bold,
-                        color: Color(0xFF8B4513),
+                        color: Color(0xFF667eea),
                       ),
                     ),
                     const SizedBox(height: 10),
                     
                     // Title
                     const Text(
-                      'Software Developer',
+                      'Loja Tradicionale Shqiptare',
                       style: TextStyle(
                         fontSize: 18,
-                        fontStyle: FontStyle.italic,
-                        color: Colors.grey,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black87,
                       ),
                     ),
-                    const SizedBox(height: 20),
-                    
-                    const Divider(),
-                    const SizedBox(height: 20),
-                    
-                    // Professional Information
-                    _buildInfoRow(
-                      Icons.work,
-                      'Profession',
-                      'Software Developer & IT Professional',
-                    ),
-                    const SizedBox(height: 15),
-                    
-                    _buildInfoRow(
-                      Icons.location_city,
-                      'Location',
-                      'Kosova 🇽🇰',
-                    ),
-                    const SizedBox(height: 15),
-                    
-                    _buildInfoRow(
-                      Icons.code,
-                      'Company',
-                      'DogaCode Solutions',
+                    const SizedBox(height: 5),
+                    const Text(
+                      'Verzion 1.0.0',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey,
+                      ),
                     ),
                   ],
                 ),
@@ -112,10 +95,10 @@ class DeveloperInfoScreen extends StatelessWidget {
                   children: [
                     Row(
                       children: const [
-                        Icon(Icons.info_outline, color: Color(0xFF8B4513)),
+                        Icon(Icons.info_outline, color: Color(0xFF667eea)),
                         SizedBox(width: 10),
                         Text(
-                          'About This App',
+                          'Ç\'është TokerrGjik?',
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
@@ -125,18 +108,18 @@ class DeveloperInfoScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 15),
                     const Text(
-                      'TokerrGjiks (Three Men\'s Morris) is a traditional board game '
-                      'from Kosovo and Albania. This mobile app brings the classic game '
-                      'to your phone with modern features!',
+                      'TokerrGjik është lojë tradicionale shqiptare që luhet me 9 figura për secilin lojtar. '
+                      'Qëllimi është të formosh "mulli" (3 figura në rresht) për të hequr figurat e kundërshtarit.',
                       style: TextStyle(fontSize: 16, height: 1.5),
                     ),
                     const SizedBox(height: 15),
                     const Text(
-                      '✨ Features:\n'
-                      '• Play against smart AI\n'
-                      '• Challenge friends online\n'
-                      '• Earn coins and unlock themes\n'
-                      '• Compete on the leaderboard',
+                      '🎮 Karakteristikat:\n'
+                      '• Luaj kundër AI-së\n'
+                      '• Luaj me shokët\n'
+                      '• Fito monedha\n'
+                      '• Zhblloko tema të reja\n'
+                      '• Garoj në renditje',
                       style: TextStyle(fontSize: 16, height: 1.5),
                     ),
                   ],
@@ -159,10 +142,10 @@ class DeveloperInfoScreen extends StatelessWidget {
                   children: [
                     Row(
                       children: const [
-                        Icon(Icons.settings, color: Color(0xFF8B4513)),
+                        Icon(Icons.code, color: Color(0xFF667eea)),
                         SizedBox(width: 10),
                         Text(
-                          'Technologies',
+                          'Zhvilluar nga',
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
@@ -171,6 +154,22 @@ class DeveloperInfoScreen extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 15),
+                    const Text(
+                      'Shaban Ejupi',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF667eea),
+                      ),
+                    ),
+                    const SizedBox(height: 5),
+                    const Text(
+                      'Kosovë 🇽🇰',
+                      style: TextStyle(fontSize: 16, color: Colors.grey),
+                    ),
+                    const SizedBox(height: 15),
+                    const Divider(),
+                    const SizedBox(height: 15),
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
@@ -178,9 +177,6 @@ class DeveloperInfoScreen extends StatelessWidget {
                         _TechChip(label: 'Flutter'),
                         _TechChip(label: 'Dart'),
                         _TechChip(label: 'PostgreSQL'),
-                        _TechChip(label: 'Netlify'),
-                        _TechChip(label: 'Neon DB'),
-                        _TechChip(label: 'PayPal API'),
                       ],
                     ),
                   ],

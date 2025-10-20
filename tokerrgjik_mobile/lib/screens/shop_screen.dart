@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../models/user_profile.dart';
 import '../services/ad_service.dart';
 import '../services/sound_service.dart';
@@ -968,38 +969,107 @@ class _ShopScreenState extends State<ShopScreen> with SingleTickerProviderStateM
     });
   }
 
-  void _purchaseCoins(BuildContext context, UserProfile profile, int coins, String price) {
+  void _purchaseCoins(BuildContext context, UserProfile profile, int coins, String price) async {
+    // Show loading
     showDialog(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Konfirmo blerjen'),
-          content: Text('Dëshiron të blesh $coins monedha me $price?'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Anulo'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                // In production, integrate with payment
-                profile.addCoins(coins);
-                SoundService.playCoin();
-                Navigator.pop(context);
-                
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('🪙 Morët $coins monedha!'),
-                    backgroundColor: Colors.green,
-                  ),
-                );
-              },
-              child: const Text('Konfirmo'),
-            ),
-          ],
-        );
-      },
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
     );
+
+    try {
+      // Create PayPal order
+      final order = await PayPalService.createOrder(
+        amount: price.replaceAll('€', '').trim(),
+        currency: 'EUR',
+        description: 'TokerrGjik - $coins Monedha',
+      );
+
+      Navigator.pop(context); // Close loading
+
+      if (order == null || order['approval_url'] == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('❌ Gabim me PayPal. Provoni përsëri.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        return;
+      }
+
+      // Open PayPal in browser
+      final approvalUrl = Uri.parse(order['approval_url']);
+      if (await canLaunchUrl(approvalUrl)) {
+        await launchUrl(approvalUrl, mode: LaunchMode.externalApplication);
+        
+        // Show verification dialog
+        showDialog(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              title: const Text('Përfundoni pagesën'),
+              content: const Text('Pasi të keni përfunduar pagesën në PayPal, shtypni "Kam paguar" për të verifikuar.'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Anulo'),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    Navigator.pop(context);
+                    
+                    // Show loading
+                    showDialog(
+                      context: context,
+                      barrierDismissible: false,
+                      builder: (_) => const Center(child: CircularProgressIndicator()),
+                    );
+                    
+                    // Verify payment with server
+                    final verification = await ApiService.post('/payments', {
+                      'action': 'verify_payment',
+                      'order_id': order['order_id'],
+                      'username': AuthService.currentUsername ?? profile.username,
+                      'package_id': 'coins_$coins',
+                    });
+                    
+                    Navigator.pop(context); // Close loading
+                    
+                    if (verification != null && verification['success'] == true) {
+                      profile.addCoins(coins);
+                      SoundService.playCoin();
+                      
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(verification['message'] ?? '🪙 Morët $coins monedha!'),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('❌ Verifikimi i pagesës dështoi. Kontaktoni suportin.'),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
+                    }
+                  },
+                  child: const Text('Kam paguar'),
+                ),
+              ],
+            );
+          },
+        );
+      }
+    } catch (e) {
+      Navigator.pop(context); // Close loading
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('❌ Gabim: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   void _watchAdForCoins(BuildContext context, UserProfile profile) {
