@@ -12,6 +12,7 @@ import 'package:tokerrgjik_mobile/services/sentry_service.dart';
 import 'package:tokerrgjik_mobile/services/notification_service.dart';
 import 'package:tokerrgjik_mobile/services/auth_service.dart';
 import 'package:tokerrgjik_mobile/services/local_storage_service.dart';
+import 'package:tokerrgjik_mobile/services/language_service.dart';
 import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/settings_screen.dart';
@@ -114,6 +115,7 @@ class TokerrgjikApp extends StatelessWidget {
         ChangeNotifierProvider(
           create: (context) => UserProfile()..loadProfile(),
         ),
+        ChangeNotifierProvider(create: (context) => LanguageService()),
         // Chat service - will be initialized when needed with actual user ID
         ChangeNotifierProvider(
           create: (context) => ChatService(

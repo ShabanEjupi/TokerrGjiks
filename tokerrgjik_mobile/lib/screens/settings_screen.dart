@@ -4,6 +4,7 @@ import '../models/user_profile.dart';
 import '../services/sound_service.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
+import '../services/language_service.dart';
 import '../config/themes.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'developer_info_screen.dart';
@@ -18,10 +19,42 @@ class SettingsScreen extends StatelessWidget {
         title: const Text('Cilësimet'),
         backgroundColor: const Color(0xFF667eea),
       ),
-      body: Consumer<UserProfile>(
-        builder: (context, profile, child) {
+      body: Consumer2<UserProfile, LanguageService>(
+        builder: (context, profile, languageService, child) {
           return ListView(
             children: [
+              // Language Settings
+              _buildSection(
+                context,
+                title: '🌐 ${languageService.translate('language')}',
+                children: [
+                  RadioListTile<String>(
+                    title: const Text('🇦🇱 Shqip'),
+                    subtitle: const Text('Albanian language'),
+                    value: 'sq',
+                    groupValue: languageService.currentLanguage,
+                    onChanged: (value) {
+                      if (value != null) {
+                        languageService.setLanguage(value);
+                        SoundService.playClick();
+                      }
+                    },
+                  ),
+                  RadioListTile<String>(
+                    title: const Text('🇬🇧 English'),
+                    subtitle: const Text('English language'),
+                    value: 'en',
+                    groupValue: languageService.currentLanguage,
+                    onChanged: (value) {
+                      if (value != null) {
+                        languageService.setLanguage(value);
+                        SoundService.playClick();
+                      }
+                    },
+                  ),
+                ],
+              ),
+              
               // Sound Settings
               _buildSection(
                 context,
