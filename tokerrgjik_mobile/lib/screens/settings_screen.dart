@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/user_profile.dart';
 import '../services/sound_service.dart';
+import '../services/api_service.dart';
+import '../services/auth_service.dart';
 import '../config/themes.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'developer_info_screen.dart';
@@ -404,32 +406,123 @@ class SettingsScreen extends StatelessWidget {
   
   void _showUsernameDialog(BuildContext context, UserProfile profile) {
     final controller = TextEditingController(text: profile.username);
+    bool isLoading = false;
+    
     showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          title: const Text('Ndrysho emrin'),
-          content: TextField(
-            controller: controller,
-            decoration: const InputDecoration(
-              labelText: 'Emri i ri',
-              border: OutlineInputBorder(),
-            ),
-            maxLength: 20,
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Anulo'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                // Update username - would need to add this to UserProfile
-                Navigator.pop(context);
-              },
-              child: const Text('Ruaj'),
-            ),
-          ],
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: const Text('Ndrysho emrin'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: controller,
+                    enabled: !isLoading,
+                    decoration: const InputDecoration(
+                      labelText: 'Emri i ri',
+                      border: OutlineInputBorder(),
+                      hintText: 'Shkruaj emrin e ri...',
+                    ),
+                    maxLength: 20,
+                  ),
+                  if (isLoading)
+                    const Padding(
+                      padding: EdgeInsets.only(top: 16),
+                      child: CircularProgressIndicator(),
+                    ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: isLoading ? null : () => Navigator.pop(context),
+                  child: const Text('Anulo'),
+                ),
+                ElevatedButton(
+                  onPressed: isLoading ? null : () async {
+                    final newUsername = controller.text.trim();
+                    
+                    // Validate username
+                    if (newUsername.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Emri nuk mund të jetë bosh!')),
+                      );
+                      return;
+                    }
+                    
+                    if (newUsername == profile.username) {
+                      Navigator.pop(context);
+                      return;
+                    }
+                    
+                    if (newUsername.length < 3) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Emri duhet të jetë së paku 3 karaktere!')),
+                      );
+                      return;
+                    }
+                    
+                    // Show loading
+                    setState(() => isLoading = true);
+                    
+                    try {
+                      // Call API to update username
+                      final result = await ApiService.updateUserProfile(
+                        oldUsername: profile.username,
+                        newUsername: newUsername,
+                      );
+                      
+                      if (result != null) {
+                        // Success! Update local profile
+                        profile.updateUsername(newUsername);
+                        
+                        // Also update AuthService if logged in
+                        if (AuthService.isLoggedIn) {
+                          AuthService.currentUsername = newUsername;
+                        }
+                        
+                        SoundService.playCoin();
+                        
+                        if (context.mounted) {
+                          Navigator.pop(context);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('✅ Emri u ndryshua në "$newUsername"!'),
+                              backgroundColor: Colors.green,
+                            ),
+                          );
+                        }
+                      } else {
+                        // API error
+                        if (context.mounted) {
+                          setState(() => isLoading = false);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('❌ Emri është i zënë ose gabim në server!'),
+                              backgroundColor: Colors.red,
+                            ),
+                          );
+                        }
+                      }
+                    } catch (e) {
+                      if (context.mounted) {
+                        setState(() => isLoading = false);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text('❌ Gabim: ${e.toString()}'),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
+                    }
+                  },
+                  child: const Text('Ruaj'),
+                ),
+              ],
+            );
+          },
         );
       },
     );

@@ -291,6 +291,13 @@ class UserProfile extends ChangeNotifier {
     notifyListeners();
   }
   
+  // Update username
+  void updateUsername(String newUsername) {
+    _username = newUsername;
+    saveProfile();
+    notifyListeners();
+  }
+  
   // Customization
   void updateTheme({
     String? theme,
