@@ -134,50 +134,42 @@ export async function handler(event, context) {
       const username = path.split('/')[1];
       const data = JSON.parse(event.body);
 
-      const updateFields = [];
-      const values = [];
-
-      if (data.wins !== undefined) {
-        updateFields.push('total_wins = total_wins + $' + (updateFields.length + 1));
-        values.push(data.wins);
-      }
-      if (data.losses !== undefined) {
-        updateFields.push('total_losses = total_losses + $' + (updateFields.length + 1));
-        values.push(data.losses);
-      }
-      if (data.draws !== undefined) {
-        updateFields.push('total_draws = total_draws + $' + (updateFields.length + 1));
-        values.push(data.draws);
-      }
-      if (data.coins !== undefined) {
-        updateFields.push('coins = coins + $' + (updateFields.length + 1));
-        values.push(data.coins);
-      }
-      if (data.level !== undefined) {
-        updateFields.push('level = $' + (updateFields.length + 1));
-        values.push(data.level);
-      }
-      if (data.xp !== undefined) {
-        updateFields.push('xp = xp + $' + (updateFields.length + 1));
-        values.push(data.xp);
-      }
-
-      updateFields.push('updated_at = NOW()');
-
-      const result = await sql`
-        UPDATE users 
-        SET ${sql(updateFields.join(', '))}
-        WHERE username = ${username}
-        RETURNING *
-      `;
-
-      if (result.length === 0) {
+      // Get current user first
+      const currentUser = await sql`SELECT * FROM users WHERE username = ${username} LIMIT 1`;
+      if (currentUser.length === 0) {
         return {
           statusCode: 404,
           headers,
           body: JSON.stringify({ error: 'User not found' }),
         };
       }
+
+      const user = currentUser[0];
+      
+      // Calculate new values
+      const newWins = user.total_wins + (data.wins || 0);
+      const newLosses = user.total_losses + (data.losses || 0);
+      const newDraws = user.total_draws + (data.draws || 0);
+      const newCoins = user.coins + (data.coins || 0);
+      const newXP = user.xp + (data.xp || 0);
+      const newLevel = data.level !== undefined ? data.level : user.level;
+      const newWinStreak = data.current_win_streak !== undefined ? data.current_win_streak : user.current_win_streak || 0;
+      const newBestStreak = data.best_win_streak !== undefined ? data.best_win_streak : user.best_win_streak || 0;
+
+      const result = await sql`
+        UPDATE users 
+        SET total_wins = ${newWins},
+            total_losses = ${newLosses},
+            total_draws = ${newDraws},
+            coins = ${newCoins},
+            xp = ${newXP},
+            level = ${newLevel},
+            current_win_streak = ${newWinStreak},
+            best_win_streak = ${newBestStreak},
+            updated_at = NOW()
+        WHERE username = ${username}
+        RETURNING *
+      `;
 
       return {
         statusCode: 200,
@@ -186,10 +178,10 @@ export async function handler(event, context) {
       };
     }
 
-    // PUT /users/profile - Update user profile (username, email, full_name)
+    // PUT /users/profile - Update user profile (username, email, avatar, isPro)
     if (method === 'PUT' && path === '/profile') {
       const data = JSON.parse(event.body);
-      const { old_username, new_username, email, full_name } = data;
+      const { old_username, new_username, email, avatar_url, is_pro, pro_expires_at } = data;
 
       if (!old_username) {
         return {
@@ -200,7 +192,7 @@ export async function handler(event, context) {
       }
 
       // Check if user exists
-      const existingUser = await sql`SELECT * FROM users WHERE username = ${old_username}`;
+      const existingUser = await sql`SELECT * FROM users WHERE username = ${old_username} LIMIT 1`;
       if (existingUser.length === 0) {
         return {
           statusCode: 404,
@@ -209,9 +201,11 @@ export async function handler(event, context) {
         };
       }
 
+      const user = existingUser[0];
+
       // If changing username, check if new username is already taken
       if (new_username && new_username !== old_username) {
-        const usernameCheck = await sql`SELECT username FROM users WHERE username = ${new_username}`;
+        const usernameCheck = await sql`SELECT username FROM users WHERE username = ${new_username} LIMIT 1`;
         if (usernameCheck.length > 0) {
           return {
             statusCode: 409,
@@ -221,36 +215,21 @@ export async function handler(event, context) {
         }
       }
 
-      // Build dynamic update query
-      const updateFields = [];
-      const values = [];
-
-      if (new_username && new_username !== old_username) {
-        updateFields.push('username = $' + (updateFields.length + 1));
-        values.push(new_username);
-      }
-      if (email !== undefined) {
-        updateFields.push('email = $' + (updateFields.length + 1));
-        values.push(email);
-      }
-      if (full_name !== undefined) {
-        updateFields.push('full_name = $' + (updateFields.length + 1));
-        values.push(full_name);
-      }
-
-      if (updateFields.length === 0) {
-        return {
-          statusCode: 400,
-          headers,
-          body: JSON.stringify({ error: 'No fields to update' }),
-        };
-      }
-
-      updateFields.push('updated_at = NOW()');
+      // Use provided values or keep existing
+      const finalUsername = new_username || old_username;
+      const finalEmail = email !== undefined ? email : user.email;
+      const finalAvatar = avatar_url !== undefined ? avatar_url : user.avatar_url;
+      const finalIsPro = is_pro !== undefined ? is_pro : user.is_pro;
+      const finalProExpires = pro_expires_at !== undefined ? pro_expires_at : user.pro_expires_at;
 
       const result = await sql`
         UPDATE users 
-        SET ${sql(updateFields.join(', '))}
+        SET username = ${finalUsername},
+            email = ${finalEmail},
+            avatar_url = ${finalAvatar},
+            is_pro = ${finalIsPro},
+            pro_expires_at = ${finalProExpires},
+            updated_at = NOW()
         WHERE username = ${old_username}
         RETURNING *
       `;

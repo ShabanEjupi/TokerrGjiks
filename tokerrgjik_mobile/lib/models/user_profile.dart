@@ -23,6 +23,13 @@ class UserProfile extends ChangeNotifier {
   Color _player2Color = Colors.black87;
   Color _boardColor = const Color(0xFFDAA520); // Gold board (classic theme)
   
+  // Theme shop
+  List<String> _unlockedThemes = ['default']; // Always have default unlocked
+  String _currentTheme = 'default';
+  
+  // Ad-skip (temporary)
+  DateTime? _adFreeUntil;
+  
   // Settings
   bool _soundEnabled = true;
   bool _musicEnabled = true;
@@ -49,6 +56,10 @@ class UserProfile extends ChangeNotifier {
   Color get player1Color => _player1Color;
   Color get player2Color => _player2Color;
   Color get boardColor => _boardColor;
+  
+  List<String> get unlockedThemes => _unlockedThemes;
+  String get currentTheme => _currentTheme;
+  bool get isAdFree => _isPro || (_adFreeUntil != null && DateTime.now().isBefore(_adFreeUntil!));
   
   bool get soundEnabled => _soundEnabled;
   bool get musicEnabled => _musicEnabled;
@@ -83,6 +94,17 @@ class UserProfile extends ChangeNotifier {
     _player1Color = Color(prefs.getInt('player1Color') ?? const Color(0xFFFFF8DC).value);
     _player2Color = Color(prefs.getInt('player2Color') ?? Colors.black87.value);
     _boardColor = Color(prefs.getInt('boardColor') ?? const Color(0xFFDAA520).value);
+    
+    final themesJson = prefs.getString('unlockedThemes');
+    if (themesJson != null) {
+      _unlockedThemes = List<String>.from(json.decode(themesJson));
+    }
+    _currentTheme = prefs.getString('currentTheme') ?? 'default';
+    
+    final adFreeString = prefs.getString('adFreeUntil');
+    if (adFreeString != null) {
+      _adFreeUntil = DateTime.parse(adFreeString);
+    }
     
     _soundEnabled = prefs.getBool('soundEnabled') ?? true;
     _musicEnabled = prefs.getBool('musicEnabled') ?? true;
@@ -126,6 +148,12 @@ class UserProfile extends ChangeNotifier {
     await prefs.setInt('player1Color', _player1Color.value);
     await prefs.setInt('player2Color', _player2Color.value);
     await prefs.setInt('boardColor', _boardColor.value);
+    
+    await prefs.setString('unlockedThemes', json.encode(_unlockedThemes));
+    await prefs.setString('currentTheme', _currentTheme);
+    if (_adFreeUntil != null) {
+      await prefs.setString('adFreeUntil', _adFreeUntil!.toIso8601String());
+    }
     
     await prefs.setBool('soundEnabled', _soundEnabled);
     await prefs.setBool('musicEnabled', _musicEnabled);
@@ -316,6 +344,33 @@ class UserProfile extends ChangeNotifier {
     notifyListeners();
   }
   
+  // Theme management
+  void unlockTheme(String themeId) {
+    if (!_unlockedThemes.contains(themeId)) {
+      _unlockedThemes.add(themeId);
+      saveProfile();
+      notifyListeners();
+    }
+  }
+  
+  void setTheme(String themeId, Color color) {
+    _currentTheme = themeId;
+    _boardColor = color;
+    saveProfile();
+    notifyListeners();
+  }
+  
+  // Ad-skip management
+  bool skipAdsWithCoins(int hours, int cost) {
+    if (spendCoins(cost)) {
+      _adFreeUntil = DateTime.now().add(Duration(hours: hours));
+      saveProfile();
+      notifyListeners();
+      return true;
+    }
+    return false;
+  }
+  
   // Serialization
   Map<String, dynamic> toJson() {
     return {
@@ -339,6 +394,9 @@ class UserProfile extends ChangeNotifier {
       'difficulty': _difficulty,
       'friends': _friends,
       'friendRequests': _friendRequests,
+      'unlockedThemes': _unlockedThemes,
+      'currentTheme': _currentTheme,
+      'adFreeUntil': _adFreeUntil?.toIso8601String(),
     };
   }
   
@@ -366,6 +424,11 @@ class UserProfile extends ChangeNotifier {
     profile._difficulty = json['difficulty'] ?? 'medium';
     profile._friends = List<String>.from(json['friends'] ?? []);
     profile._friendRequests = List<String>.from(json['friendRequests'] ?? []);
+    profile._unlockedThemes = List<String>.from(json['unlockedThemes'] ?? ['default']);
+    profile._currentTheme = json['currentTheme'] ?? 'default';
+    profile._adFreeUntil = json['adFreeUntil'] != null 
+        ? DateTime.parse(json['adFreeUntil']) 
+        : null;
     return profile;
   }
 }

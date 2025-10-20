@@ -16,7 +16,7 @@ class PaymentConfig {
       'priceValue': 2.99,
       'features': [
         '✓ Pa reklama për 1 muaj',
-        '✓ Tema ekskluzive',
+        '✓ Themes ekskluzive',
         '✓ 100 monedha bonus',
       ],
     },
@@ -29,11 +29,11 @@ class PaymentConfig {
       'discount': '50% ZBRITJE!',
       'features': [
         '✓ Pa reklama për gjithmonë',
-        '✓ Tema ekskluzive',
+        '✓ Themes ekskluzive',
         '✓ Ikona dhe ngjyra të personalizuara',
         '✓ 1000 monedha bonus',
         '✓ Badge "PRO" në leaderboard',
-        '✓ Mbështetje prioritare',
+        '✓ Mbështetje me prioritet',
       ],
     },
   };

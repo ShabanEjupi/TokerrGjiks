@@ -145,8 +145,9 @@ class AdService {
   }
 
   /// Show interstitial ad if game count threshold reached (every 3 games)
-  static void showInterstitialAdIfReady() {
-    if (kIsWeb) return;
+  /// Pass userProfile to check if user is ad-free
+  static void showInterstitialAdIfReady({bool isAdFree = false}) {
+    if (kIsWeb || isAdFree) return;
     
     _gameCount++;
     if (_gameCount % 3 == 0 && _interstitialAd != null) {

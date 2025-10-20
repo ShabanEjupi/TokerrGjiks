@@ -159,7 +159,7 @@ class _MultiplayerLobbyScreenState extends State<MultiplayerLobbyScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Multiplayer Lobby'),
+        title: const Text('Multiplayer'),
         backgroundColor: Colors.deepPurple,
         actions: [
           IconButton(

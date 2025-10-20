@@ -1,11 +1,11 @@
 {
-    "name": "TokerrGjiks - Lojë strategjike tradicionale",
-    "short_name": "TokerrGjiks",
+    "name": "TokerrGjik - Lojë strategjike tradicionale",
+    "short_name": "TokerrGjik",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#1a1a2e",
     "theme_color": "#16213e",
-    "description": "TokerrGjiks - Lojë strategjike tradicionale për disa lojtarë",
+    "description": "TokerrGjik - Lojë strategjike tradicionale për disa lojtarë",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

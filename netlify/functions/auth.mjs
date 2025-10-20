@@ -19,6 +19,35 @@ function generateToken(username) {
 
 function verifyToken(token) {
   try {
+    const payload = JSON.parse(Buffer.from(token, 'base64').toString());
+    return payload.username;
+  } catch {
+    return null;
+  }
+}
+
+export async function handler(event, context) {
+  // Enable CORS
+  const headers = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Content-Type': 'application/json',
+  };
+  
+  if (event.httpMethod === 'OPTIONS') {
+    return { statusCode: 200, headers, body: '' };
+  }
+  
+  if (event.httpMethod !== 'POST') {
+    return {
+      statusCode: 405,
+      headers,
+      body: JSON.stringify({ error: 'Method not allowed' }),
+    };
+  }
+  
+  try {
     // Check if database is configured
     if (!sql) {
       return {
@@ -30,29 +59,7 @@ function verifyToken(token) {
       };
     }
 
-    const payload = JSON.parse(Buffer.from(token, 'base64').toString());
-    return payload.username;
-  } catch {
-    return null;
-  }
-}
-
-export default async (req, res) => {
-  // Enable CORS
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-  
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-  
-  try {
-    const { action, username, email, password, full_name, old_password, new_password } = req.body;
+    const { action, username, email, password, full_name, old_password, new_password } = JSON.parse(event.body || '{}');
     
     // REGISTER
     if (action === 'register') {
@@ -63,16 +70,25 @@ export default async (req, res) => {
       `;
       
       if (existingUser.length > 0) {
-        return res.status(400).json({ error: 'Username or email already exists' });
+        return {
+          statusCode: 400,
+          headers,
+          body: JSON.stringify({ error: 'Username or email already exists' }),
+        };
       }
       
       // Insert new user
-      await sql`
-        INSERT INTO users (username, email, password, full_name, coins, wins, losses, level, avatar_url)
-        VALUES (${username}, ${email}, ${password}, ${full_name}, 100, 0, 0, 1, '')
+      const result = await sql`
+        INSERT INTO users (username, email, password, coins, level, xp, total_wins, total_losses, total_draws, created_at, updated_at)
+        VALUES (${username}, ${email || null}, ${password || null}, 100, 1, 0, 0, 0, 0, NOW(), NOW())
+        RETURNING *
       `;
       
-      return res.status(201).json({ message: 'User registered successfully' });
+      return {
+        statusCode: 201,
+        headers,
+        body: JSON.stringify({ message: 'User registered successfully', user: result[0] }),
+      };
     }
     
     // LOGIN
@@ -80,77 +96,126 @@ export default async (req, res) => {
       const user = await sql`
         SELECT * FROM users 
         WHERE username = ${username} AND password = ${password}
+        LIMIT 1
       `;
       
       if (user.length === 0) {
-        return res.status(401).json({ error: 'Invalid username or password' });
+        return {
+          statusCode: 401,
+          headers,
+          body: JSON.stringify({ error: 'Invalid username or password' }),
+        };
       }
+      
+      // Update last login
+      await sql`
+        UPDATE users 
+        SET last_login_at = NOW()
+        WHERE username = ${username}
+      `;
       
       const token = generateToken(username);
       
-      return res.status(200).json({
-        message: 'Login successful',
-        token,
-        user: {
-          username: user[0].username,
-          email: user[0].email,
-          full_name: user[0].full_name,
-          coins: user[0].coins,
-          level: user[0].level,
-          avatar_url: user[0].avatar_url,
-        }
-      });
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          message: 'Login successful',
+          token,
+          user: {
+            username: user[0].username,
+            email: user[0].email,
+            coins: user[0].coins,
+            level: user[0].level,
+            xp: user[0].xp,
+            total_wins: user[0].total_wins,
+            total_losses: user[0].total_losses,
+            total_draws: user[0].total_draws,
+            is_pro: user[0].is_pro,
+            avatar_url: user[0].avatar_url,
+          }
+        }),
+      };
     }
     
     // VERIFY TOKEN
     if (action === 'verify') {
-      const authHeader = req.headers.authorization;
+      const authHeader = event.headers.authorization || event.headers.Authorization;
       if (!authHeader) {
-        return res.status(401).json({ error: 'No token provided' });
+        return {
+          statusCode: 401,
+          headers,
+          body: JSON.stringify({ error: 'No token provided' }),
+        };
       }
       
       const token = authHeader.replace('Bearer ', '');
       const verifiedUsername = verifyToken(token);
       
       if (!verifiedUsername || verifiedUsername !== username) {
-        return res.status(401).json({ error: 'Invalid token' });
+        return {
+          statusCode: 401,
+          headers,
+          body: JSON.stringify({ error: 'Invalid token' }),
+        };
       }
       
-      return res.status(200).json({ message: 'Token valid', username: verifiedUsername });
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({ message: 'Token valid', username: verifiedUsername }),
+      };
     }
     
     // CHANGE PASSWORD
     if (action === 'change_password') {
-      const authHeader = req.headers.authorization;
+      const authHeader = event.headers.authorization || event.headers.Authorization;
       if (!authHeader) {
-        return res.status(401).json({ error: 'Not authenticated' });
+        return {
+          statusCode: 401,
+          headers,
+          body: JSON.stringify({ error: 'Not authenticated' }),
+        };
       }
       
       const token = authHeader.replace('Bearer ', '');
       const verifiedUsername = verifyToken(token);
       
       if (!verifiedUsername) {
-        return res.status(401).json({ error: 'Invalid token' });
+        return {
+          statusCode: 401,
+          headers,
+          body: JSON.stringify({ error: 'Invalid token' }),
+        };
       }
       
       // Verify old password
       const user = await sql`
         SELECT * FROM users 
         WHERE username = ${username} AND password = ${old_password}
+        LIMIT 1
       `;
       
       if (user.length === 0) {
-        return res.status(401).json({ error: 'Incorrect old password' });
+        return {
+          statusCode: 401,
+          headers,
+          body: JSON.stringify({ error: 'Incorrect old password' }),
+        };
       }
       
       // Update password
       await sql`
         UPDATE users 
-        SET password = ${new_password}
+        SET password = ${new_password}, updated_at = NOW()
         WHERE username = ${username}
       `;
       
-      return res.status(200).json({ message: 'Password changed successfully' });
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({ message: 'Password changed successfully' }),
+      };
     }
     
     // REQUEST PASSWORD RESET
@@ -158,23 +223,40 @@ export default async (req, res) => {
       const user = await sql`
         SELECT username, email FROM users 
         WHERE email = ${email}
+        LIMIT 1
       `;
       
       if (user.length === 0) {
-        return res.status(404).json({ error: 'Email not found' });
+        return {
+          statusCode: 404,
+          headers,
+          body: JSON.stringify({ error: 'Email not found' }),
+        };
       }
       
       // In production, send email with reset link here
       // For now, just return success
-      return res.status(200).json({ 
-        message: 'Password reset email sent (demo mode - implement email service)'
-      });
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({ 
+          message: 'Password reset email sent (demo mode - implement email service)'
+        }),
+      };
     }
     
-    return res.status(400).json({ error: 'Invalid action' });
+    return {
+      statusCode: 400,
+      headers,
+      body: JSON.stringify({ error: 'Invalid action' }),
+    };
     
   } catch (error) {
     console.error('Auth error:', error);
-    return res.status(500).json({ error: 'Internal server error' });
+    return {
+      statusCode: 500,
+      headers,
+      body: JSON.stringify({ error: 'Internal server error', message: error.message }),
+    };
   }
-};
+}

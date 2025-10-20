@@ -5,6 +5,10 @@ import '../models/user_profile.dart';
 import '../widgets/game_board.dart';
 import '../services/sound_service.dart';
 import '../services/notification_service.dart';
+import '../services/api_service.dart';
+import '../services/local_storage_service.dart';
+import '../services/auth_service.dart';
+import '../services/hints_service.dart';
 
 class GameScreen extends StatefulWidget {
   final String? mode;
@@ -279,6 +283,9 @@ class _GameScreenState extends State<GameScreen> {
       winnerName = 'Lojtari $winner fitoi!';
     }
     
+    // Save result before showing dialog
+    _saveResultForWinner(winner);
+
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -303,6 +310,47 @@ class _GameScreenState extends State<GameScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _saveResultForWinner(int winner) async {
+    final username = AuthService.currentUsername ?? Provider.of<UserProfile>(context, listen: false).username;
+    String result = 'draw';
+    String? opponent;
+
+    if (game.aiEnabled) {
+      if (winner == 1) result = 'win'; else result = 'loss';
+      opponent = 'AI';
+    } else {
+      // Local multiplayer: winner is player 1 or 2
+      if (winner == 1) result = 'win'; else result = 'loss';
+      opponent = 'player_${winner == 1 ? 2 : 1}';
+    }
+
+    // Update local profile immediately
+    final profile = Provider.of<UserProfile>(context, listen: false);
+    if (result == 'win') profile.recordWin();
+    else if (result == 'loss') profile.recordLoss();
+    else profile.recordDraw();
+
+    // Try to send to server; if fails, save locally
+    try {
+      await ApiService.saveGameResult(
+        username: username,
+        gameMode: widget.mode ?? (game.aiEnabled ? 'vs_ai' : 'local'),
+        result: result,
+        opponentUsername: opponent,
+      );
+    } catch (e) {
+      final local = LocalStorageService();
+      await local.init();
+      await local.saveGameHistory({
+        'username': username,
+        'game_mode': widget.mode ?? (game.aiEnabled ? 'vs_ai' : 'local'),
+        'result': result,
+        'opponent_username': opponent,
+        'played_at': DateTime.now().toIso8601String(),
+      });
+    }
   }
 
   void showRules() {
@@ -387,6 +435,41 @@ class _GameScreenState extends State<GameScreen> {
         foregroundColor: Colors.white,
         elevation: 0,
         actions: [
+          // Hints button - only show in placing and moving phases
+          if (game.phase != 'removing' && game.phase != 'gameover')
+            IconButton(
+              icon: Stack(
+                children: [
+                  const Icon(Icons.lightbulb_outline),
+                  Positioned(
+                    right: 0,
+                    top: 0,
+                    child: Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: const BoxDecoration(
+                        color: Colors.orange,
+                        shape: BoxShape.circle,
+                      ),
+                      constraints: const BoxConstraints(
+                        minWidth: 14,
+                        minHeight: 14,
+                      ),
+                      child: Text(
+                        '${HintsService.HINT_COST}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 8,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              onPressed: () => HintsService.showHintDialog(context, game, game.currentPlayer),
+              tooltip: 'Blej Hint (${HintsService.HINT_COST} monedha)',
+            ),
           IconButton(
             icon: const Icon(Icons.settings),
             onPressed: () => Navigator.pushNamed(context, '/settings'),
@@ -461,24 +544,28 @@ class _GameScreenState extends State<GameScreen> {
 
               // Game board - takes remaining space
               Center(
-                child: AspectRatio(
-                  aspectRatio: 1,
-                  child: ConstrainedBox(
-                    constraints: const BoxConstraints(
-                      maxWidth: 380,
-                      maxHeight: 380,
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: GameBoard(
-                        game: game,
-                        onPositionTap: handlePositionTap,
-                        boardColor: profile.boardColor,
-                        player1Color: profile.player1Color,
-                        player2Color: profile.player2Color,
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    // Use 90% of available width or height (whichever is smaller)
+                    final size = constraints.maxWidth < constraints.maxHeight
+                        ? constraints.maxWidth * 0.90
+                        : constraints.maxHeight * 0.90;
+                    
+                    return SizedBox(
+                      width: size,
+                      height: size,
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: GameBoard(
+                          game: game,
+                          onPositionTap: handlePositionTap,
+                          boardColor: profile.boardColor,
+                          player1Color: profile.player1Color,
+                          player2Color: profile.player2Color,
+                        ),
                       ),
-                    ),
-                  ),
+                    );
+                  },
                 ),
               ),
 

@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
+import 'api_service.dart';
+import 'local_storage_service.dart';
 
 /// Simplified Multiplayer Service using Polling (No Socket.IO needed!)
 /// 
@@ -13,7 +15,7 @@ class SimpleMultiplayerService {
   factory SimpleMultiplayerService() => _instance;
   SimpleMultiplayerService._internal();
 
-  static const String baseUrl = 'https://tokerrgjik.netlify.app/.netlify/functions';
+  static String get baseUrl => kIsWeb ? 'https://tokerrgjik.netlify.app/.netlify/functions' : ApiService.baseUrl;
   Timer? _pollTimer;
   String? _currentSessionId;
 
@@ -29,30 +31,36 @@ class SimpleMultiplayerService {
     bool isPrivate = false,
   }) async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/games'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'action': 'create_session',
-          'host_username': hostUsername,
-          'guest_username': guestUsername,
-          'is_private': isPrivate,
-        }),
-      );
+      // Use ApiService.post which handles base URLs and web/mobile differences
+      final result = await ApiService.post('/games', {
+        'action': 'create_session',
+        'host_username': hostUsername,
+        'guest_username': guestUsername,
+        'is_private': isPrivate,
+      });
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final data = jsonDecode(response.body);
-        _currentSessionId = data['session_id'].toString();
-        
-        // Start polling for updates
+      if (result != null && result['session_id'] != null) {
+        _currentSessionId = result['session_id'].toString();
         startPolling(_currentSessionId!);
-        
         debugPrint('✅ Session created: $_currentSessionId');
         return _currentSessionId;
-      } else {
-        debugPrint('❌ Failed to create session: ${response.statusCode}');
-        return null;
       }
+      // If no result (offline/mobile fallback), persist locally
+      final local = LocalStorageService();
+      await local.init();
+      final sessions = local.getSetting('cached_sessions') ?? [];
+      // create temporary session id
+      final tempId = 'local_${DateTime.now().millisecondsSinceEpoch}';
+      final newSession = {
+        'session_id': tempId,
+        'host_username': hostUsername,
+        'status': 'waiting',
+      };
+      final updated = List<Map<String, dynamic>>.from(sessions)..add(newSession);
+      await local.saveSetting('cached_sessions', updated);
+      _currentSessionId = tempId;
+      startPolling(_currentSessionId!);
+      return _currentSessionId;
     } catch (e) {
       debugPrint('Error creating session: $e');
       if (onError != null) onError!('Failed to create game session');
@@ -66,28 +74,33 @@ class SimpleMultiplayerService {
     required String username,
   }) async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/games'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'action': 'join_session',
-          'session_id': sessionId,
-          'username': username,
-        }),
-      );
+      final result = await ApiService.post('/games', {
+        'action': 'join_session',
+        'session_id': sessionId,
+        'username': username,
+      });
 
-      if (response.statusCode == 200) {
+      if (result != null) {
         _currentSessionId = sessionId;
-        
-        // Start polling for updates
         startPolling(sessionId);
-        
         debugPrint('✅ Joined session: $sessionId');
         return true;
-      } else {
-        debugPrint('❌ Failed to join session: ${response.statusCode}');
-        return false;
       }
+      // Fallback: if local session exists, mark joined
+      final local = LocalStorageService();
+      await local.init();
+      final sessions = local.getSetting('cached_sessions') ?? [];
+      // Mark as active
+      for (var s in sessions) {
+        if (s['session_id'] == sessionId) {
+          s['guest_username'] = username;
+          s['status'] = 'active';
+        }
+      }
+      await local.saveSetting('cached_sessions', sessions);
+      _currentSessionId = sessionId;
+      startPolling(sessionId);
+      return true;
     } catch (e) {
       debugPrint('Error joining session: $e');
       if (onError != null) onError!('Failed to join game session');
@@ -102,25 +115,31 @@ class SimpleMultiplayerService {
     required String action, // 'place', 'move', 'remove'
   }) async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/games'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'action': 'make_move',
-          'session_id': sessionId,
-          'position': position,
-          'move_action': action,
-          'timestamp': DateTime.now().toIso8601String(),
-        }),
-      );
+      final result = await ApiService.post('/games', {
+        'action': 'make_move',
+        'session_id': sessionId,
+        'position': position,
+        'move_action': action,
+        'timestamp': DateTime.now().toIso8601String(),
+      });
 
-      if (response.statusCode == 200) {
+      if (result != null) {
         debugPrint('✅ Move made: position $position, action $action');
         return true;
-      } else {
-        debugPrint('❌ Failed to make move: ${response.statusCode}');
-        return false;
       }
+      // Fallback: store move locally
+      final local = LocalStorageService();
+      await local.init();
+      final pending = local.getSetting('pending_moves') ?? [];
+      final updated = List<Map<String, dynamic>>.from(pending)
+        ..add({
+          'session_id': sessionId,
+          'position': position,
+          'action': action,
+          'timestamp': DateTime.now().toIso8601String(),
+        });
+      await local.saveSetting('pending_moves', updated);
+      return true;
     } catch (e) {
       debugPrint('Error making move: $e');
       if (onError != null) onError!('Failed to make move');
@@ -171,16 +190,14 @@ class SimpleMultiplayerService {
   /// Get list of available game sessions
   Future<List<Map<String, dynamic>>> getAvailableSessions() async {
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/games?action=list_sessions'),
-      );
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        return List<Map<String, dynamic>>.from(data['sessions'] ?? []);
-      } else {
-        return [];
+      final result = await ApiService.get('/games?action=list_sessions');
+      if (result != null && result['sessions'] != null) {
+        return List<Map<String, dynamic>>.from(result['sessions']);
       }
+      // Fallback to cached sessions
+      final local = LocalStorageService();
+      await local.init();
+      return List<Map<String, dynamic>>.from(local.getSetting('cached_sessions') ?? []);
     } catch (e) {
       debugPrint('Error getting sessions: $e');
       return [];
@@ -191,14 +208,10 @@ class SimpleMultiplayerService {
   Future<void> leaveSession() async {
     if (_currentSessionId != null) {
       try {
-        await http.post(
-          Uri.parse('$baseUrl/games'),
-          headers: {'Content-Type': 'application/json'},
-          body: jsonEncode({
-            'action': 'leave_session',
-            'session_id': _currentSessionId,
-          }),
-        );
+        await ApiService.post('/games', {
+          'action': 'leave_session',
+          'session_id': _currentSessionId,
+        });
       } catch (e) {
         debugPrint('Error leaving session: $e');
       }

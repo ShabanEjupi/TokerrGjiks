@@ -4,6 +4,7 @@ import '../models/user_profile.dart';
 import '../services/sound_service.dart';
 import '../config/themes.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
+import 'developer_info_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -180,11 +181,11 @@ class SettingsScreen extends StatelessWidget {
                   ),
                   ListTile(
                     title: Text(
-                      profile.isPro ? '✨ Llogari PRO' : 'Përmirëso në PRO',
+                      profile.isPro ? '✨ Llogari PRO' : 'Kalo në PRO',
                     ),
                     subtitle: Text(
                       profile.isPro 
-                        ? 'Pa reklama, tema ekskluzive' 
+                        ? 'Pa reklama, Themes ekskluzive' 
                         : 'Hiq reklamat dhe merr avantazhe',
                     ),
                     trailing: profile.isPro 
@@ -206,9 +207,45 @@ class SettingsScreen extends StatelessWidget {
                     title: Text('Versioni'),
                     subtitle: Text('1.0.0'),
                   ),
-                  const ListTile(
-                    title: Text('Zhvilluar nga'),
-                    subtitle: Text('DogaCode Solutions'),
+                  ListTile(
+                    title: const Text('Zhvilluar nga'),
+                    subtitle: const Text('DogaCode Solutions'),
+                    trailing: const Icon(Icons.info_outline),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const DeveloperInfoScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+              
+              // About / Developer Info
+              _buildSection(
+                context,
+                title: 'ℹ️ Informacion',
+                children: [
+                  ListTile(
+                    leading: const Icon(Icons.code, color: Color(0xFF667eea)),
+                    title: const Text('Informacion për zhvilluesin'),
+                    subtitle: const Text('Shiko detajet e aplikacionit'),
+                    trailing: const Icon(Icons.arrow_forward_ios, size: 16),
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const DeveloperInfoScreen(),
+                        ),
+                      );
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.info_outline, color: Color(0xFF667eea)),
+                    title: const Text('Versioni i aplikacionit'),
+                    subtitle: const Text('1.0.0'),
                   ),
                 ],
               ),

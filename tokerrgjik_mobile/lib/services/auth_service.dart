@@ -1,9 +1,9 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
-import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../config/api_keys.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:math';
+import '../services/api_service.dart';
 
 /// Authentication service for user login/register
 /// - Web: Uses backend API with JWT tokens
@@ -56,33 +56,25 @@ class AuthService {
       };
     }
     
+    // Web: use ApiService which routes to Netlify functions
     try {
-      final response = await http.post(
-        Uri.parse('$_baseUrl/api/auth/register'),
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode({
-          'username': username,
-          'password': password,
-          'email': email,
-        }),
-      ).timeout(const Duration(seconds: 10));
-      
-      if (response.statusCode == 201 || response.statusCode == 200) {
-        final data = json.decode(response.body);
-        _currentUserId = data['userId']?.toString();
-        _authToken = data['token'];
+      final result = await ApiService.post('/auth', {
+        'action': 'register',
+        'username': username,
+        'password': password,
+        if (email != null) 'email': email,
+      });
+
+      if (result != null) {
+        // Netlify auth returns user object
+        _currentUserId = result['user']?['id']?.toString() ?? result['userId']?.toString();
+        _authToken = result['token'] ?? result['token'];
         _currentUsername = username;
         await _saveAuthLocal();
-        return {
-          ...data,
-          'success': true,
-        };
-      } else {
-        print('Register failed: ${response.statusCode} - ${response.body}');
+        return { ...result, 'success': true };
       }
     } catch (e) {
       print('Register error: $e');
-      // Fallback to local mode on error
       return await _createLocalUser(username);
     }
     return null;
@@ -108,31 +100,21 @@ class AuthService {
     }
     
     try {
-      final response = await http.post(
-        Uri.parse('$_baseUrl/api/auth/login'),
-        headers: {'Content-Type': 'application/json'},
-        body: json.encode({
-          'username': username,
-          'password': password,
-        }),
-      ).timeout(const Duration(seconds: 10));
-      
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        _currentUserId = data['userId']?.toString();
-        _authToken = data['token'];
+      final result = await ApiService.post('/auth', {
+        'action': 'login',
+        'username': username,
+        'password': password,
+      });
+
+      if (result != null) {
+        _currentUserId = result['user']?['id']?.toString() ?? result['userId']?.toString();
+        _authToken = result['token'];
         _currentUsername = username;
         await _saveAuthLocal();
-        return {
-          ...data,
-          'success': true,
-        };
-      } else {
-        print('Login failed: ${response.statusCode} - ${response.body}');
+        return { ...result, 'success': true };
       }
     } catch (e) {
       print('Login error: $e');
-      // Fallback to local mode on error
       return await _createLocalUser(username);
     }
     return null;
@@ -172,13 +154,9 @@ class AuthService {
   static Future<void> logout() async {
     if (kIsWeb && _authToken != null) {
       try {
-        await http.post(
-          Uri.parse('$_baseUrl/api/auth/logout'),
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer $_authToken',
-          },
-        ).timeout(const Duration(seconds: 5));
+        await ApiService.post('/auth', {
+          'action': 'logout',
+        }, headers: { 'Authorization': 'Bearer $_authToken' });
       } catch (e) {
         print('Logout error: $e');
       }

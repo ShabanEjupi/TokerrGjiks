@@ -62,23 +62,23 @@ export default async (req, res) => {
     // FRIEND REQUEST
     if (type === 'friend_request') {
       const fromUsername = data.from_username;
-      subject = `🎮 Kërkesë miqësie nga ${fromUsername} - TokerrGjiks`;
+      subject = `🎮 Kërkesë miqësie nga ${fromUsername} - TokerrGjik`;
       html = `
         <h2>Përshëndetje ${fullName}!</h2>
-        <p><strong>${fromUsername}</strong> dëshiron të bëhet miku juaj në TokerrGjiks!</p>
+        <p><strong>${fromUsername}</strong> dëshiron të bëhet miku juaj në TokerrGjik!</p>
         <p>Hyni në aplikacion për të pranuar ose refuzuar kërkesën.</p>
         <br>
-        <p>Faleminderit që luani TokerrGjiks! 🎮</p>
+        <p>Faleminderit që luani TokerrGjik! 🎮</p>
       `;
     }
     
     // GAME INVITE
     else if (type === 'game_invite') {
       const fromUsername = data.from_username;
-      subject = `🎲 Ftesë loje nga ${fromUsername} - TokerrGjiks`;
+      subject = `🎲 Ftesë loje nga ${fromUsername} - TokerrGjik`;
       html = `
         <h2>Përshëndetje ${fullName}!</h2>
-        <p><strong>${fromUsername}</strong> ju fton të luani një lojë TokerrGjiks!</p>
+        <p><strong>${fromUsername}</strong> ju fton të luani një lojë TokerrGjik!</p>
         <p>Hyni në aplikacion për të filluar lojën.</p>
         <br>
         <p>Suksese! 🏆</p>
@@ -89,7 +89,7 @@ export default async (req, res) => {
     else if (type === 'achievement_unlocked') {
       const achievementTitle = data.achievement_title;
       const achievementIcon = data.achievement_icon || '🏆';
-      subject = `${achievementIcon} Arritje e re hapur - TokerrGjiks`;
+      subject = `${achievementIcon} Arritje e re e fituar - TokerrGjik`;
       html = `
         <h2>Urime ${fullName}!</h2>
         <p>Keni hapur një arritje të re:</p>
@@ -104,19 +104,19 @@ export default async (req, res) => {
     else if (type === 'pro_purchase') {
       const months = data.months || 1;
       const amount = data.amount || '€2.99';
-      subject = `✅ Konfirmim blerje PRO - TokerrGjiks`;
+      subject = `✅ Konfirmim blerje PRO - TokerrGjik`;
       html = `
         <h2>Faleminderit ${fullName}!</h2>
         <p>Blerja juaj është konfirmuar:</p>
         <ul>
-          <li><strong>Pajtime:</strong> TokerrGjiks PRO</li>
+          <li><strong>Pajtime:</strong> TokerrGjik PRO</li>
           <li><strong>Kohëzgjatja:</strong> ${months} muaj</li>
           <li><strong>Shuma:</strong> ${amount}</li>
         </ul>
         <p>Tani keni qasje në:</p>
         <ul>
           <li>✨ Pa reklama</li>
-          <li>🎨 Tema të personalizuara</li>
+          <li>🎨 Themes të personalizuara</li>
           <li>📊 Statistika të avancuara</li>
           <li>👑 Statusi PRO në Leaderboard</li>
         </ul>
@@ -129,7 +129,7 @@ export default async (req, res) => {
     else if (type === 'coins_purchase') {
       const coins = data.coins || 100;
       const amount = data.amount || '€0.99';
-      subject = `💰 Konfirmim blerje monedhash - TokerrGjiks`;
+      subject = `💰 Konfirmim blerje monedhash - TokerrGjik`;
       html = `
         <h2>Faleminderit ${fullName}!</h2>
         <p>Blerja juaj është konfirmuar:</p>
@@ -147,7 +147,7 @@ export default async (req, res) => {
     else if (type === 'password_reset') {
       const resetToken = data.reset_token || 'DEMO_TOKEN';
       const resetLink = `https://tokerrgjik.netlify.app/reset-password?token=${resetToken}`;
-      subject = `🔐 Rivendosni fjalëkalimin - TokerrGjiks`;
+      subject = `🔐 Rivendosni fjalëkalimin - TokerrGjik`;
       html = `
         <h2>Përshëndetje ${fullName}!</h2>
         <p>Keni kërkuar të rivendosni fjalëkalimin tuaj.</p>
