@@ -517,7 +517,7 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Zgjedh vështirësinë'),
+          title: const Text('Zgjedh nivelin'),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [

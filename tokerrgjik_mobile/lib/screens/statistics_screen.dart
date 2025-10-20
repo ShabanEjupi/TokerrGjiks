@@ -330,7 +330,7 @@ class _StatisticsScreenState extends State<StatisticsScreen> {
             const Divider(),
             _buildStatRow('⭐ Niveli', level.toString()),
             const Divider(),
-            _buildStatRow('🎯 Vështirësia', _getDifficultyName(profile.difficulty)),
+            _buildStatRow('🎯 Niveli i vështirësisë', _getDifficultyName(profile.difficulty)),
           ],
         ),
       ),

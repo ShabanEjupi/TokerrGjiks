@@ -95,7 +95,7 @@ class SettingsScreen extends StatelessWidget {
               // Difficulty Settings
               _buildSection(
                 context,
-                title: '🎯 Vështirësitë e AI',
+                title: '🎯 Nivelet e AI',
                 children: [
                   RadioListTile<String>(
                     title: const Text('E lehtë'),
