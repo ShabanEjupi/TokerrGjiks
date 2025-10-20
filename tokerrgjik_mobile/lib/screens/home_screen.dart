@@ -565,39 +565,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _showStatsDialog() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return Consumer<UserProfile>(
-          builder: (context, profile, child) {
-            return AlertDialog(
-              title: const Text('📊 Statistikat e mia'),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _statRow('Fitore', '${profile.totalWins}', Colors.green),
-                    _statRow('Humbje', '${profile.totalLosses}', Colors.red),
-                    _statRow('Barazime', '${profile.totalDraws}', Colors.orange),
-                    const Divider(),
-                    _statRow('Përqindja fitimeve', '${profile.winRate.toStringAsFixed(1)}%', const Color(0xFF667eea)),
-                    _statRow('Seria aktuale', '${profile.winStreak}', Colors.amber),
-                    _statRow('Seria më e mirë', '${profile.bestStreak}', Colors.amber),
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Mbyll'),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
+    // Navigate to full statistics screen instead of showing dialog
+    Navigator.pushNamed(context, '/statistics');
   }
 
   Widget _statRow(String label, String value, Color color) {
