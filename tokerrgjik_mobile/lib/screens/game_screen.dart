@@ -35,10 +35,7 @@ class _GameScreenState extends State<GameScreen> {
     
     // Set up bonus callback for shilevek rewards
     game.onBonusEarned = (int coins, String reason) {
-      _coinsEarned += coins;
-      _showBonusNotification(coins, reason);
-      // Update user coins in profile
-      _awardCoins(coins);
+      _awardCoins(coins, reason);
     };
     
     // Configure game based on mode and difficulty
@@ -791,51 +788,5 @@ class _GameScreenState extends State<GameScreen> {
         ],
       ),
     );
-  }
-
-  // Show bonus notification for shilevek mastery
-  void _showBonusNotification(int coins, String reason) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.stars, color: Colors.amber, size: 24),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    reason,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                  Text(
-                    '+$coins coins for exceptional play!',
-                    style: const TextStyle(fontSize: 14),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        backgroundColor: Colors.green.shade700,
-        duration: const Duration(seconds: 4),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-  }
-
-  // Award coins to the user profile
-  Future<void> _awardCoins(int coins) async {
-    try {
-      final profile = Provider.of<UserProfile>(context, listen: false);
-      await profile.addCoins(coins);
-    } catch (e) {
-      print('Error awarding coins: $e');
-    }
   }
 }
