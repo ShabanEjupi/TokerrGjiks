@@ -1,6 +1,6 @@
-# TokerrGjiks - Multiplayer Tic-Tac-Toe Game
+# TokerrGjiks - Multiplayer Game
 
-A Flutter-based multiplayer Tic-Tac-Toe game with online features, leaderboard, friends system, and in-app purchases.
+A Flutter-based multiplayer game with online features, leaderboard, friends system, and in-app purchases.
 
 ## 🎮 Features
 
