@@ -19,6 +19,10 @@ class GameModel {
   bool aiEnabled = false;
   int aiPlayer = 2;
   
+  // Anti-Shilevek: Track recent mill formations to prevent repeated mill exploit
+  final List<int> _recentMillPositions = [];
+  static const int maxRecentMills = 3; // Track last 3 mill positions
+  
   // Undo/Redo functionality
   final List<GameSnapshot> _history = [];
   final List<GameSnapshot> _redoStack = [];
@@ -173,6 +177,22 @@ class GameModel {
     board[from] = null;
 
     if (checkMill(to)) {
+      // ANTI-SHILEVEK CHECK: Prevent repeated mill exploit
+      // If this position was used to form a mill recently (within last 3 mills),
+      // don't count it as a valid mill (no piece removal)
+      if (_recentMillPositions.contains(to)) {
+        // This is a repeated mill - don't allow piece removal
+        // Just switch player and continue
+        switchPlayer();
+        return false; // No mill counted
+      }
+      
+      // Valid new mill - track it and allow removal
+      _recentMillPositions.add(to);
+      if (_recentMillPositions.length > maxRecentMills) {
+        _recentMillPositions.removeAt(0); // Keep only last N mills
+      }
+      
       phase = 'removing';
       return true; // Mill formed - DO NOT switch player, they must remove a piece
     }
@@ -305,6 +325,7 @@ class GameModel {
     piecesLeft = {1: 9, 2: 9};
     piecesOnBoard = {1: 0, 2: 0};
     selectedPosition = null;
+    _recentMillPositions.clear(); // Clear anti-shilevek tracking
     _history.clear();
     _redoStack.clear();
     _saveState(); // Save initial state
