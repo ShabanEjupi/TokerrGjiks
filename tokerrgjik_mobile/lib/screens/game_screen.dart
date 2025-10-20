@@ -22,12 +22,16 @@ class GameScreen extends StatefulWidget {
 
 class _GameScreenState extends State<GameScreen> {
   late GameModel game;
+  int _player1Mills = 0; // Track mills formed by player 1
+  int _coinsEarned = 0; // Track coins earned this game
 
   @override
   void initState() {
     super.initState();
     game = GameModel();
     game.reset(); // Initialize history
+    _player1Mills = 0;
+    _coinsEarned = 0;
     
     // Configure game based on mode and difficulty
     if (widget.mode == 'ai' && widget.difficulty != null) {
@@ -50,6 +54,11 @@ class _GameScreenState extends State<GameScreen> {
         SoundService.playPlacePiece();
         if (millFormed) {
           SoundService.playMill();
+          // Award coins for mill if player 1 formed it
+          if (game.currentPlayer == 1) {
+            _player1Mills++;
+            _awardCoins(2, 'Mill formed! +2 monedha 🎯');
+          }
           // Player must remove an opponent's piece - don't trigger AI yet
         } else if (!game.checkWinCondition()) {
           // Turn automatically switched in placePiece() - trigger AI if needed
@@ -85,6 +94,11 @@ class _GameScreenState extends State<GameScreen> {
               
               if (millFormed) {
                 SoundService.playMill();
+                // Award coins for mill if player 1 formed it
+                if (game.currentPlayer == 1) {
+                  _player1Mills++;
+                  _awardCoins(2, 'Mill formed! +2 monedha 🎯');
+                }
                 // Player must remove an opponent's piece - don't trigger AI yet
               } else if (!game.checkWinCondition()) {
                 // Turn automatically switched in movePiece() - trigger AI if needed
@@ -207,6 +221,8 @@ class _GameScreenState extends State<GameScreen> {
   void resetGame() {
     setState(() {
       game.reset();
+      _player1Mills = 0;
+      _coinsEarned = 0;
     });
   }
 
@@ -235,6 +251,27 @@ class _GameScreenState extends State<GameScreen> {
         game.redo();
         SoundService.playClick();
       });
+    }
+  }
+
+  void _awardCoins(int amount, String message) {
+    setState(() {
+      _coinsEarned += amount;
+    });
+    
+    // Update user profile immediately
+    final profile = Provider.of<UserProfile>(context, listen: false);
+    profile.addCoins(amount);
+    
+    // Show snackbar notification
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(message),
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 2),
+        ),
+      );
     }
   }
 
@@ -269,18 +306,36 @@ class _GameScreenState extends State<GameScreen> {
     // This means currentPlayer is the WINNER (not the loser)
     final winner = game.currentPlayer; // Current player is the winner!
     
+    // Check for shilevek bonus (opponent reduced to exactly 3 pieces)
+    final loser = winner == 1 ? 2 : 1;
+    final bool isShilevek = game.piecesOnBoard[loser] == 3;
+    
+    // Award shilevek bonus if player 1 wins
+    if (winner == 1 && isShilevek) {
+      _awardCoins(20, 'SHILEVEK! +20 monedha bonus! 🌟');
+    }
+    
     // Determine winner name based on game mode
     String winnerName;
+    String contentMessage;
     if (game.aiEnabled) {
       // In AI mode: Player 1 is always the student, Player 2 is AI
       if (winner == 1) {
         winnerName = 'Ti fitove!'; // Student won
+        contentMessage = 'Urime për fitoren!\n\n'
+            '🎯 Mills: $_player1Mills x 2 = ${_player1Mills * 2} monedha\n'
+            '${isShilevek ? "🌟 Shilevek bonus: +20 monedha\n" : ""}'
+            '💰 Total monedha fituar: $_coinsEarned';
       } else {
         winnerName = 'AI fitoi!'; // AI won
+        contentMessage = 'Provoje përsëri!';
       }
     } else {
       // In local multiplayer mode
       winnerName = 'Lojtari $winner fitoi!';
+      contentMessage = winner == 1 
+          ? 'Mills: $_player1Mills\n${isShilevek ? "Shilevek bonus! 🌟\n" : ""}Monedha fituar: $_coinsEarned'
+          : 'Provoje përsëri!';
     }
     
     // Save result before showing dialog
@@ -291,7 +346,7 @@ class _GameScreenState extends State<GameScreen> {
       barrierDismissible: false,
       builder: (context) => AlertDialog(
         title: Text(game.aiEnabled && winner == 1 ? '🎉 $winnerName' : '🎮 $winnerName'),
-        content: Text(winner == 1 && game.aiEnabled ? 'Urime për fitoren!' : 'Provoje përsëri!'),
+        content: Text(contentMessage),
         actions: [
           TextButton(
             onPressed: () {
