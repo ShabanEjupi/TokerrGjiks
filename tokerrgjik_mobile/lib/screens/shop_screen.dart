@@ -141,11 +141,8 @@ class _ShopScreenState extends State<ShopScreen> with SingleTickerProviderStateM
           {'name': 'Ocean Blue', 'color': const Color(0xFF1e3a8a), 'cost': 50, 'id': 'ocean'},
           {'name': 'Forest Green', 'color': const Color(0xFF166534), 'cost': 50, 'id': 'forest'},
           {'name': 'Sunset Orange', 'color': const Color(0xFFea580c), 'cost': 75, 'id': 'sunset'},
-          {'name': 'Royal Purple', 'color': const Color(0xFF7c3aed), 'cost': 75, 'id': 'purple'},
-          {'name': 'Rose Pink', 'color': const Color(0xFFdb2777), 'cost': 100, 'id': 'rose'},
           {'name': 'Midnight Black', 'color': const Color(0xFF111827), 'cost': 100, 'id': 'midnight'},
           {'name': 'Golden Shine', 'color': const Color(0xFFfbbf24), 'cost': 150, 'id': 'gold'},
-          {'name': 'Rainbow (PRO)', 'color': Colors.purple, 'cost': -1, 'id': 'rainbow'}, // PRO only
         ];
 
         return ListView(
