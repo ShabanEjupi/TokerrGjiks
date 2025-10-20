@@ -4,7 +4,7 @@ A Flutter-based multiplayer game with online features, leaderboard, friends syst
 
 ## 🎮 Features
 
-- **Single Player**: Play against AI with 3 difficulty levels
+- **Single Player**: Play against AI with 4 difficulty levels
 - **Multiplayer**: Real-time online matches with friends
 - **Leaderboard**: Global ranking system
 - **Friends System**: Add friends and challenge them
