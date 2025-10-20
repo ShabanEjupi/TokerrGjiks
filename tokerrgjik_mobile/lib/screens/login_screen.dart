@@ -24,15 +24,14 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = true);
 
     final result = _isLoginMode
-        ? await AuthService().login(
+        ? await AuthService.login(
             username: _usernameController.text.trim(),
             password: _passwordController.text,
           )
-        : await AuthService().register(
+        : await AuthService.register(
             username: _usernameController.text.trim(),
             email: _emailController.text.trim(),
             password: _passwordController.text,
-            fullName: _fullNameController.text.trim(),
           );
 
     setState(() => _isLoading = false);
@@ -67,7 +66,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   Future<void> _handleGuestLogin() async {
     setState(() => _isLoading = true);
-    await AuthService().loginAsGuest();
+    await AuthService.loginAsGuest();
     setState(() => _isLoading = false);
 
     if (!mounted) return;

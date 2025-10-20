@@ -297,9 +297,10 @@ class ApiService {
     required String hostUsername,
     String? invitedUsername,
   }) async {
-    return await post('/sessions/create', {
+    return await post('/games', {
+      'action': 'create_session',
       'host_username': hostUsername,
-      if (invitedUsername != null) 'invited_username': invitedUsername,
+      if (invitedUsername != null) 'guest_username': invitedUsername,
     });
   }
   
@@ -308,14 +309,18 @@ class ApiService {
     String sessionId,
     String username,
   ) async {
-    return await post('/sessions/$sessionId/join', {
+    return await post('/games', {
+      'action': 'join_session',
+      'session_id': sessionId,
       'username': username,
     });
   }
   
   /// Get active game sessions
   static Future<List<Map<String, dynamic>>> getActiveSessions() async {
-    final result = await get('/sessions/active');
+    final result = await post('/games', {
+      'action': 'list_sessions',
+    });
     if (result != null && result['sessions'] != null) {
       return List<Map<String, dynamic>>.from(result['sessions']);
     }

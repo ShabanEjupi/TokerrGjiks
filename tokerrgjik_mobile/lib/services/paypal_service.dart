@@ -70,8 +70,12 @@ class PayPalService {
             }
           ],
           'application_context': {
-            'return_url': 'https://tokerrgjik.netlify.app/payment-success',
-            'cancel_url': 'https://tokerrgjik.netlify.app/payment-cancelled',
+            'return_url': PaymentConfig.useSandbox 
+                ? 'https://tokerrgjik.netlify.app/payment-success?sandbox=true'
+                : 'https://tokerrgjik.netlify.app/payment-success',
+            'cancel_url': PaymentConfig.useSandbox
+                ? 'https://tokerrgjik.netlify.app/payment-cancelled?sandbox=true'
+                : 'https://tokerrgjik.netlify.app/payment-cancelled',
           }
         }),
       );

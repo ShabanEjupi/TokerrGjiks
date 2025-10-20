@@ -275,7 +275,7 @@ class _ShopScreenState extends State<ShopScreen> with SingleTickerProviderStateM
   void _selectTheme(BuildContext context, UserProfile profile, String themeId, Color color) {
     setState(() {
       profile.setTheme(themeId, color);
-      LocalStorageService.saveUser({
+      LocalStorageService().saveUser({
         ...profile.toJson(),
         'currentTheme': themeId,
         'boardColor': color.value.toString(),
@@ -359,8 +359,8 @@ class _ShopScreenState extends State<ShopScreen> with SingleTickerProviderStateM
     if (confirmed == true && mounted) {
       if (profile.spendCoins(cost)) {
         profile.unlockTheme(themeId);
-        await LocalStorageService.unlockTheme(themeId);
-        await LocalStorageService.saveUser(profile.toJson());
+        await LocalStorageService().unlockTheme(themeId);
+        await LocalStorageService().saveUser(profile.toJson());
         
         SoundService.playCoin();
         
@@ -545,7 +545,7 @@ class _ShopScreenState extends State<ShopScreen> with SingleTickerProviderStateM
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Nuk do të shohësh reklama deri më ${_formatDateTime(profile._adFreeUntil!)}',
+                        'Nuk do të shohësh reklama deri më ${_formatDateTime(profile.adFreeUntil!)}',
                         style: TextStyle(fontSize: 16, color: Colors.grey[700]),
                         textAlign: TextAlign.center,
                       ),

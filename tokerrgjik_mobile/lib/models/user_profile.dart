@@ -59,6 +59,7 @@ class UserProfile extends ChangeNotifier {
   
   List<String> get unlockedThemes => _unlockedThemes;
   String get currentTheme => _currentTheme;
+  DateTime? get adFreeUntil => _adFreeUntil;
   bool get isAdFree => _isPro || (_adFreeUntil != null && DateTime.now().isBefore(_adFreeUntil!));
   
   bool get soundEnabled => _soundEnabled;
