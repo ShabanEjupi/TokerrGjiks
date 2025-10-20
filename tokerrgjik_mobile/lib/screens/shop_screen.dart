@@ -6,6 +6,7 @@ import '../services/sound_service.dart';
 import '../services/paypal_service.dart';
 import '../services/api_service.dart';
 import '../services/local_storage_service.dart';
+import '../services/auth_service.dart';
 
 class ShopScreen extends StatefulWidget {
   const ShopScreen({super.key});
