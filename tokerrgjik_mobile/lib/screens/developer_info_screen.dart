@@ -109,7 +109,7 @@ class DeveloperInfoScreen extends StatelessWidget {
                     const SizedBox(height: 15),
                     const Text(
                       'TokerrGjik është lojë tradicionale shqiptare që luhet me 9 figura për secilin lojtar. '
-                      'Qëllimi është të formosh "mulli" (3 figura në rresht) për të hequr figurat e kundërshtarit.',
+                      'Qëllimi është të formosh "dang" (3 figura në rresht) për të hequr figurat e kundërshtarit.',
                       style: TextStyle(fontSize: 16, height: 1.5),
                     ),
                     const SizedBox(height: 15),
