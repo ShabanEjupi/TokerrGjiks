@@ -315,27 +315,36 @@ class _GameScreenState extends State<GameScreen> {
       _awardCoins(20, 'SHILEVEK! +20 monedha bonus! 🌟');
     }
     
-    // Determine winner name based on game mode
+    // Determine winner name and dialog style based on game mode
     String winnerName;
     String contentMessage;
+    IconData dialogIcon;
+    Color dialogColor;
+    
     if (game.aiEnabled) {
       // In AI mode: Player 1 is always the student, Player 2 is AI
       if (winner == 1) {
-        winnerName = 'Ti fitove!'; // Student won
+        winnerName = '🎉 Ti fitove!'; // Student won
+        dialogIcon = Icons.emoji_events;
+        dialogColor = Colors.green;
         contentMessage = 'Urime për fitoren!\n\n'
             '🎯 Mills: $_player1Mills x 2 = ${_player1Mills * 2} monedha\n'
             '${isShilevek ? "🌟 Shilevek bonus: +20 monedha\n" : ""}'
             '💰 Total monedha fituar: $_coinsEarned';
       } else {
-        winnerName = 'AI fitoi!'; // AI won
-        contentMessage = 'Provoje përsëri!';
+        winnerName = '😔 AI fitoi!'; // AI won
+        dialogIcon = Icons.sentiment_dissatisfied;
+        dialogColor = Colors.red;
+        contentMessage = 'AI ishte më i fortë këtë herë!\n\nProvoje përsëri dhe fito!';
       }
     } else {
       // In local multiplayer mode
-      winnerName = 'Lojtari $winner fitoi!';
+      winnerName = winner == 1 ? '🎉 Lojtari 1 fitoi!' : '🎮 Lojtari 2 fitoi!';
+      dialogIcon = Icons.emoji_events;
+      dialogColor = winner == 1 ? Colors.green : Colors.blue;
       contentMessage = winner == 1 
           ? 'Mills: $_player1Mills\n${isShilevek ? "Shilevek bonus! 🌟\n" : ""}Monedha fituar: $_coinsEarned'
-          : 'Provoje përsëri!';
+          : 'Urime për fitoren!';
     }
     
     // Save result before showing dialog
@@ -345,7 +354,13 @@ class _GameScreenState extends State<GameScreen> {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: Text(game.aiEnabled && winner == 1 ? '🎉 $winnerName' : '🎮 $winnerName'),
+        title: Row(
+          children: [
+            Icon(dialogIcon, color: dialogColor, size: 32),
+            const SizedBox(width: 12),
+            Expanded(child: Text(winnerName, style: TextStyle(color: dialogColor))),
+          ],
+        ),
         content: Text(contentMessage),
         actions: [
           TextButton(
