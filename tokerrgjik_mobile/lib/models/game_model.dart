@@ -183,7 +183,7 @@ class GameModel {
       // is playing very strategically (shilevek technique) - reward them!
       if (_recentMillPositions.contains(to)) {
         // This is a repeated mill (shilevek) - BONUS COINS!
-        onBonusEarned?.call(shilevekBonusCoins, 'Shilevek Mastery! Repeated mill formation');
+        onBonusEarned?.call(shilevekBonusCoins, 'Shilevek ekspert! Formim i përsëritur i dangut');
       }
       
       // Track this mill position
