@@ -17,7 +17,7 @@ class DeveloperInfoScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Rreth Aplikacionit'),
+        title: const Text('Rreth aplikacionit'),
         backgroundColor: const Color(0xFF667eea),
       ),
       body: SingleChildScrollView(

@@ -113,7 +113,7 @@ class LanguageService extends ChangeNotifier {
       'friends_only': 'Vetëm miqtë',
       
       // Developer info
-      'developer_info': 'Rreth Aplikacionit',
+      'developer_info': 'Rreth aplikacionit',
       'about_app': 'Ç\'është TokerrGjik?',
       'developer': 'Zhvilluar nga',
       'version': 'Versioni',

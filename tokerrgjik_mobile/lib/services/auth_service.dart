@@ -14,6 +14,7 @@ class AuthService {
   static String? _currentUserId;
   static String? _authToken;
   static String? _currentUsername;
+  static bool _isGuest = false;
   
   // Fun random username adjectives and nouns for auto-generated names
   static const List<String> _adjectives = [
@@ -191,6 +192,7 @@ class AuthService {
     _currentUserId = null;
     _authToken = null;
     _currentUsername = null;
+    _isGuest = false;
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('userId');
     await prefs.remove('authToken');
@@ -222,7 +224,7 @@ class AuthService {
   static bool get isLoggedIn => _currentUserId != null;
   
   /// Check if guest
-  static bool get isGuest => _currentUserId?.startsWith('guest_') ?? false;
+  static bool get isGuest => _isGuest;
   
   /// Load auth from local storage
   static Future<void> _loadAuthLocal() async {
