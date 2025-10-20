@@ -1,5 +1,5 @@
--- TokerrGjik Database Initialization Script for Neon PostgreSQL
--- Run this in your Neon SQL Editor: https://console.neon.tech
+-- TokerrGjiks Database Schema for Neon PostgreSQL
+-- Run this in your Neon SQL Editor: https://console.neon.tech/
 
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
@@ -9,7 +9,7 @@ CREATE TABLE IF NOT EXISTS users (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     username VARCHAR(50) UNIQUE NOT NULL,
     email VARCHAR(255),
-    password VARCHAR(255), -- For authentication
+    password VARCHAR(255), -- For future authentication
     coins INTEGER DEFAULT 100,
     level INTEGER DEFAULT 1,
     xp INTEGER DEFAULT 0,
@@ -62,7 +62,7 @@ CREATE TABLE IF NOT EXISTS game_sessions (
     completed_at TIMESTAMP
 );
 
--- Achievements table
+-- Achievements table (optional for future)
 CREATE TABLE IF NOT EXISTS achievements (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     username VARCHAR(50) NOT NULL REFERENCES users(username) ON DELETE CASCADE,
@@ -91,11 +91,10 @@ END;
 $$ language 'plpgsql';
 
 -- Trigger to auto-update updated_at
-DROP TRIGGER IF EXISTS update_users_updated_at ON users;
 CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
--- Insert sample data for testing (optional)
+-- Insert some sample data for testing
 INSERT INTO users (username, email, coins, level, total_wins, total_losses, total_draws) VALUES
     ('AlbinKosovar', 'albin@example.com', 500, 5, 25, 10, 3),
     ('DoraShqipja', 'dora@example.com', 350, 4, 18, 12, 5),
@@ -122,5 +121,6 @@ SELECT
 FROM users
 ORDER BY total_wins DESC, level DESC, xp DESC;
 
--- Success message
-SELECT 'Database initialized successfully! ✅' as status;
+-- Done! Your database is ready.
+-- Copy the connection string from Neon dashboard and add it to Netlify environment variables:
+-- NEON_DATABASE_URL=postgresql://...
