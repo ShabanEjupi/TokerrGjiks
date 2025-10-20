@@ -19,9 +19,10 @@ class GameModel {
   bool aiEnabled = false;
   int aiPlayer = 2;
   
-  // Anti-Shilevek: Track recent mill formations to prevent repeated mill exploit
+  // Shilevek bonus: Track repeated mills for smart play rewards
   final List<int> _recentMillPositions = [];
-  static const int maxRecentMills = 3; // Track last 3 mill positions
+  static const int shilevekBonusCoins = 20; // Bonus coins for repeated mill mastery
+  Function(int coins, String reason)? onBonusEarned; // Callback for awarding bonus coins
   
   // Undo/Redo functionality
   final List<GameSnapshot> _history = [];
@@ -177,20 +178,18 @@ class GameModel {
     board[from] = null;
 
     if (checkMill(to)) {
-      // ANTI-SHILEVEK CHECK: Prevent repeated mill exploit
-      // If this position was used to form a mill recently (within last 3 mills),
-      // don't count it as a valid mill (no piece removal)
+      // SHILEVEK BONUS: Reward smart players who create repeated mills!
+      // If this position was used to form a mill recently, it means the player
+      // is playing very strategically (shilevek technique) - reward them!
       if (_recentMillPositions.contains(to)) {
-        // This is a repeated mill - don't allow piece removal
-        // Just switch player and continue
-        switchPlayer();
-        return false; // No mill counted
+        // This is a repeated mill (shilevek) - BONUS COINS!
+        onBonusEarned?.call(shilevekBonusCoins, 'Shilevek Mastery! Repeated mill formation');
       }
       
-      // Valid new mill - track it and allow removal
+      // Track this mill position
       _recentMillPositions.add(to);
-      if (_recentMillPositions.length > maxRecentMills) {
-        _recentMillPositions.removeAt(0); // Keep only last N mills
+      if (_recentMillPositions.length > 5) {
+        _recentMillPositions.removeAt(0); // Keep reasonable history
       }
       
       phase = 'removing';
@@ -325,7 +324,7 @@ class GameModel {
     piecesLeft = {1: 9, 2: 9};
     piecesOnBoard = {1: 0, 2: 0};
     selectedPosition = null;
-    _recentMillPositions.clear(); // Clear anti-shilevek tracking
+    _recentMillPositions.clear(); // Clear shilevek tracking for new game
     _history.clear();
     _redoStack.clear();
     _saveState(); // Save initial state
