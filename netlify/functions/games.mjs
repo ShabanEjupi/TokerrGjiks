@@ -49,6 +49,48 @@ export async function handler(event, context) {
       if (action === 'create_session') {
         const { host_username, guest_username, is_private } = data;
         
+        if (!host_username) {
+          return {
+            statusCode: 400,
+            headers,
+            body: JSON.stringify({ error: 'Missing host_username' }),
+          };
+        }
+        
+        // Ensure host user exists in users table (or create if needed)
+        try {
+          const existingUser = await sql`
+            SELECT username FROM users WHERE username = ${host_username}
+          `;
+          
+          if (existingUser.length === 0) {
+            // Create user if doesn't exist (for guest users)
+            await sql`
+              INSERT INTO users (
+                username, email, password, coins, level, xp, 
+                total_wins, total_losses, total_draws, created_at
+              )
+              VALUES (
+                ${host_username}, 
+                ${host_username + '@guest.local'}, 
+                NULL,
+                100,
+                1,
+                0,
+                0,
+                0,
+                0,
+                NOW()
+              )
+              ON CONFLICT (username) DO NOTHING
+            `;
+          }
+        } catch (userError) {
+          console.error('Error ensuring user exists:', userError);
+          // Continue anyway - user might already exist
+        }
+        
+        // Create game session
         const session = await sql`
           INSERT INTO game_sessions (host_username, guest_username, status, board_state, current_turn)
           VALUES (${host_username}, ${guest_username || null}, 'waiting', '{}', ${host_username})
@@ -76,6 +118,22 @@ export async function handler(event, context) {
           statusCode: 200,
           headers,
           body: JSON.stringify({ message: 'Joined session', session_id }),
+        };
+      }
+
+      // LIST AVAILABLE SESSIONS (POST support)
+      if (action === 'list_sessions') {
+        const sessions = await sql`
+          SELECT * FROM game_sessions 
+          WHERE status = 'waiting'
+          ORDER BY created_at DESC
+          LIMIT 20
+        `;
+        
+        return {
+          statusCode: 200,
+          headers,
+          body: JSON.stringify({ sessions }),
         };
       }
 
