@@ -182,7 +182,7 @@ class _MultiplayerLobbyScreenState extends State<MultiplayerLobbyScreen> {
                 child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
               )
             : const Icon(Icons.add),
-        label: Text(_isCreatingSession ? 'Creating...' : 'Create Game'),
+        label: Text(_isCreatingSession ? 'Creating...' : 'Create game'),
       ),
     );
   }

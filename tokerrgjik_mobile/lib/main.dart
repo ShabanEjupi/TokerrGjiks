@@ -10,7 +10,10 @@ import 'package:tokerrgjik_mobile/services/database_service.dart';
 import 'package:tokerrgjik_mobile/services/chat_service.dart';
 import 'package:tokerrgjik_mobile/services/sentry_service.dart';
 import 'package:tokerrgjik_mobile/services/notification_service.dart';
+import 'package:tokerrgjik_mobile/services/auth_service.dart';
+import 'package:tokerrgjik_mobile/services/local_storage_service.dart';
 import 'screens/home_screen.dart';
+import 'screens/login_screen.dart';
 import 'screens/settings_screen.dart';
 import 'screens/shop_screen.dart';
 import 'screens/leaderboard_screen.dart';
@@ -58,6 +61,24 @@ void main() async {
     print('Notification service initialized successfully');
   } catch (e) {
     print('Notification initialization error: $e');
+  }
+  
+  try {
+    // Initialize LocalStorageService for mobile
+    await LocalStorageService().init();
+    print('Local storage initialized successfully');
+  } catch (e) {
+    print('Local storage initialization error: $e');
+  }
+  
+  try {
+    // Initialize AuthService and check login status
+    await AuthService.initialize();
+    print('Auth service initialized successfully');
+    print('User logged in: ${AuthService.isLoggedIn}');
+    print('Current username: ${AuthService.currentUsername}');
+  } catch (e) {
+    print('Auth initialization error: $e');
   }
   
       // Initialize sound service
@@ -109,8 +130,13 @@ class TokerrgjikApp extends StatelessWidget {
           useMaterial3: true,
           fontFamily: 'Roboto',
         ),
-        home: const HomeScreen(),
+        // Check if user is logged in, show LoginScreen if not
+        home: AuthService.isLoggedIn && !AuthService.isGuest 
+            ? const HomeScreen() 
+            : const LoginScreen(),
         routes: {
+          '/home': (context) => const HomeScreen(),
+          '/login': (context) => const LoginScreen(),
           '/settings': (context) => const SettingsScreen(),
           '/shop': (context) => const ShopScreen(),
           '/leaderboard': (context) => const LeaderboardScreen(),

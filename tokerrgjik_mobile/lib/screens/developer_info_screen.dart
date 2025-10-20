@@ -75,21 +75,21 @@ class DeveloperInfoScreen extends StatelessWidget {
                     // Professional Information
                     _buildInfoRow(
                       Icons.work,
-                      'IT Professional',
-                      'Republic of Kosova Customs',
+                      'Profession',
+                      'Software Developer & IT Professional',
                     ),
                     const SizedBox(height: 15),
                     
                     _buildInfoRow(
-                      Icons.school,
-                      'Master\'s Student',
-                      'University of Kosova',
+                      Icons.location_city,
+                      'Location',
+                      'Kosova 🇽🇰',
                     ),
                     const SizedBox(height: 15),
                     
                     _buildInfoRow(
                       Icons.code,
-                      'Development Company',
+                      'Company',
                       'DogaCode Solutions',
                     ),
                   ],
@@ -125,15 +125,18 @@ class DeveloperInfoScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 15),
                     const Text(
-                      'TokerrGjiks is a traditional Albanian board game brought to life '
-                      'with modern technology. This game represents the rich cultural '
-                      'heritage of Kosovo and Albania.',
+                      'TokerrGjiks (Three Men\'s Morris) is a traditional board game '
+                      'from Kosovo and Albania. This mobile app brings the classic game '
+                      'to your phone with modern features!',
                       style: TextStyle(fontSize: 16, height: 1.5),
                     ),
                     const SizedBox(height: 15),
                     const Text(
-                      'Developed with ❤️ using Flutter, featuring AI opponents, '
-                      'multiplayer capabilities, and beautiful animations.',
+                      '✨ Features:\n'
+                      '• Play against smart AI\n'
+                      '• Challenge friends online\n'
+                      '• Earn coins and unlock themes\n'
+                      '• Compete on the leaderboard',
                       style: TextStyle(fontSize: 16, height: 1.5),
                     ),
                   ],
@@ -192,7 +195,7 @@ class DeveloperInfoScreen extends StatelessWidget {
               child: Column(
                 children: [
                   const Text(
-                    '© 2024 Shaban Ejupi',
+                    '© 2025 Shaban Ejupi',
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
