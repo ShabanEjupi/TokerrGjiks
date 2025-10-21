@@ -61,11 +61,19 @@ jobs:
       
       - name: Build APK (Release)
         working-directory: tokerrgjik_mobile
-        run: flutter build apk --release --split-per-abi
+        run: |
+          flutter build apk --release --split-per-abi \
+            --dart-define=CRYPTOLENS_PRODUCT_ID="${{ secrets.CRYPTOLENS_PRODUCT_ID }}" \
+            --dart-define=CRYPTOLENS_ACCESS_TOKEN="${{ secrets.CRYPTOLENS_ACCESS_TOKEN }}" \
+            --dart-define=CRYPTOLENS_RSA_PUBLIC_KEY="${{ secrets.CRYPTOLENS_RSA_PUBLIC_KEY }}"
       
       - name: Build App Bundle (Release)
         working-directory: tokerrgjik_mobile
-        run: flutter build appbundle --release
+        run: |
+          flutter build appbundle --release \
+            --dart-define=CRYPTOLENS_PRODUCT_ID="${{ secrets.CRYPTOLENS_PRODUCT_ID }}" \
+            --dart-define=CRYPTOLENS_ACCESS_TOKEN="${{ secrets.CRYPTOLENS_ACCESS_TOKEN }}" \
+            --dart-define=CRYPTOLENS_RSA_PUBLIC_KEY="${{ secrets.CRYPTOLENS_RSA_PUBLIC_KEY }}"
       
       - name: Upload APK artifacts
         uses: actions/upload-artifact@v4
@@ -141,7 +149,10 @@ jobs:
         working-directory: tokerrgjik_mobile
         run: |
           echo "ℹ️  Building iOS without codesigning (manual signing required for deployment)"
-          flutter build ios --release --no-codesign
+          flutter build ios --release --no-codesign \
+            --dart-define=CRYPTOLENS_PRODUCT_ID="${{ secrets.CRYPTOLENS_PRODUCT_ID }}" \
+            --dart-define=CRYPTOLENS_ACCESS_TOKEN="${{ secrets.CRYPTOLENS_ACCESS_TOKEN }}" \
+            --dart-define=CRYPTOLENS_RSA_PUBLIC_KEY="${{ secrets.CRYPTOLENS_RSA_PUBLIC_KEY }}"
           echo "✅ iOS build complete - manual codesigning needed before App Store submission"
       
       - name: Create IPA
@@ -215,7 +226,11 @@ jobs:
       
       - name: Build Web
         working-directory: tokerrgjik_mobile
-        run: flutter build web --release
+        run: |
+          flutter build web --release \
+            --dart-define=CRYPTOLENS_PRODUCT_ID="${{ secrets.CRYPTOLENS_PRODUCT_ID }}" \
+            --dart-define=CRYPTOLENS_ACCESS_TOKEN="${{ secrets.CRYPTOLENS_ACCESS_TOKEN }}" \
+            --dart-define=CRYPTOLENS_RSA_PUBLIC_KEY="${{ secrets.CRYPTOLENS_RSA_PUBLIC_KEY }}"
       
       - name: Upload Web artifacts
         uses: actions/upload-artifact@v4

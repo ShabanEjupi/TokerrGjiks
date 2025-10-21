@@ -17,20 +17,26 @@ import 'package:flutter/foundation.dart' show kIsWeb;
 /// - Usage analytics
 /// - Anti-piracy protection
 class CryptolensService {
-  // Cryptolens API Configuration
-  static const String _cryptolensProductId = '24449'; // Your product ID
+  // ✅ SECURE: Keys are injected at build time via --dart-define
+  // Never hardcode these values! Use GitHub Secrets for CI/CD.
+  // See SECURE_KEYS_SETUP.md for full setup instructions.
+  
+  static const String _rsaPublicKey = String.fromEnvironment(
+    'CRYPTOLENS_RSA_PUBLIC_KEY',
+    defaultValue: '', // Empty = Development mode (no license check)
+  );
+
+  static const String _accessToken = String.fromEnvironment(
+    'CRYPTOLENS_ACCESS_TOKEN',
+    defaultValue: '', // Empty = Development mode
+  );
+  
+  static const int _productId = int.fromEnvironment(
+    'CRYPTOLENS_PRODUCT_ID',
+    defaultValue: 0, // 0 = Development mode
+  );
+  
   static const String _cryptolensApiUrl = 'https://app.cryptolens.io/api/key';
-  
-  // IMPORTANT: Store these securely - DO NOT COMMIT TO PUBLIC REPOS
-  // In production, use environment variables or secure storage
-  static const String _rsaPublicKey = '''
------BEGIN PUBLIC KEY-----
-MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA
-[YOUR RSA PUBLIC KEY FROM CRYPTOLENS]
------END PUBLIC KEY-----
-'''; // Get from Cryptolens Dashboard -> Product -> Public Keys
-  
-  static const String _accessToken = 'YOUR_ACCESS_TOKEN_HERE'; // Get from Cryptolens account settings
   
   static String? _licenseKey;
   static bool _isLicensed = false;
@@ -56,7 +62,7 @@ MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA
         Uri.parse('$_cryptolensApiUrl/Activate'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
-          'ProductId': _cryptolensProductId,
+          'ProductId': _productId,
           'Key': licenseKey,
           'Sign': true,
           'MachineCode': machineCode,
@@ -140,7 +146,7 @@ MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA
         Uri.parse('$_cryptolensApiUrl/Deactivate'),
         headers: {'Content-Type': 'application/json'},
         body: json.encode({
-          'ProductId': _cryptolensProductId,
+          'ProductId': _productId,
           'Key': _licenseKey,
           'MachineCode': machineCode,
           'token': _accessToken,

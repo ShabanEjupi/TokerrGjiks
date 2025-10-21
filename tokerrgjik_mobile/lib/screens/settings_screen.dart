@@ -599,7 +599,7 @@ class SettingsScreen extends StatelessWidget {
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisStart,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               _buildLicenseRow('Status:', licenseStatus['isLicensed'] ? '✅ Active' : '⚠️ Inactive'),
               _buildLicenseRow('License Key:', licenseStatus['licenseKey']),
