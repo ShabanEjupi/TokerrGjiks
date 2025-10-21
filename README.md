@@ -1,4 +1,4 @@
-# 🎮 TokerrGjik - Loja Tradicionale Shqiptare
+# 🎮 TokerrGjik - Loja tradicionale shqiptare
 
 Aplikacion mobil për lojën tradicionale shqiptare TokerrGjik.
 

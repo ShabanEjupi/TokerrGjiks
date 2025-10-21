@@ -60,7 +60,7 @@ class DeveloperInfoScreen extends StatelessWidget {
                     
                     // Title
                     const Text(
-                      'Loja Tradicionale Shqiptare',
+                      'Loja tradicionale shqiptare',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
