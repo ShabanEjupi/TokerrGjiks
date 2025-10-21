@@ -5,6 +5,8 @@ import '../services/sound_service.dart';
 import '../services/api_service.dart';
 import '../services/auth_service.dart';
 import '../services/language_service.dart';
+import '../services/translations.dart';
+import '../services/cryptolens_service.dart';
 import '../config/themes.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'developer_info_screen.dart';
@@ -243,6 +245,19 @@ class SettingsScreen extends StatelessWidget {
                   const ListTile(
                     title: Text('Versioni'),
                     subtitle: Text('1.0.0'),
+                  ),
+                  ListTile(
+                    title: const Text('🔐 License Status'),
+                    subtitle: Text(
+                      CryptolensService.isLicensed 
+                        ? '✅ Licensed & Protected' 
+                        : '⚠️ No License - Limited Features'
+                    ),
+                    trailing: Icon(
+                      CryptolensService.isLicensed ? Icons.verified_user : Icons.warning,
+                      color: CryptolensService.isLicensed ? Colors.green : Colors.orange,
+                    ),
+                    onTap: () => _showLicenseInfo(context),
                   ),
                   ListTile(
                     title: const Text('Zhvilluar nga'),
@@ -560,6 +575,93 @@ class SettingsScreen extends StatelessWidget {
           },
         );
       },
+    );
+  }
+  
+  void _showLicenseInfo(BuildContext context) async {
+    final licenseStatus = await CryptolensService.getLicenseStatus();
+    
+    if (!context.mounted) return;
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(
+              CryptolensService.isLicensed ? Icons.verified_user : Icons.warning,
+              color: CryptolensService.isLicensed ? Colors.green : Colors.orange,
+            ),
+            const SizedBox(width: 8),
+            const Text('License Information'),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisStart,
+            children: [
+              _buildLicenseRow('Status:', licenseStatus['isLicensed'] ? '✅ Active' : '⚠️ Inactive'),
+              _buildLicenseRow('License Key:', licenseStatus['licenseKey']),
+              if (licenseStatus['expiry'] != null)
+                _buildLicenseRow('Expires:', '${licenseStatus['daysRemaining']} days'),
+              if (licenseStatus['activations'] != null)
+                _buildLicenseRow('Activations:', licenseStatus['activations']),
+              _buildLicenseRow('App Version:', '${licenseStatus['appVersion']} (${licenseStatus['buildNumber']})'),
+              const Divider(),
+              const Text(
+                '© 2025 Shaban Ejupi\nAll Rights Reserved',
+                style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'Protected by Cryptolens License System',
+                style: TextStyle(fontSize: 10, color: Colors.grey),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                '⚖️ Patent Pending:\n• Dual-save architecture\n• AI algorithms\n• Multiplayer sync',
+                style: TextStyle(fontSize: 10, color: Colors.blue),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Close'),
+          ),
+          if (!CryptolensService.isLicensed)
+            ElevatedButton(
+              onPressed: () {
+                // TODO: Navigate to license purchase page
+                Navigator.pop(context);
+              },
+              child: const Text('Get License'),
+            ),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildLicenseRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 100,
+            child: Text(
+              label,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+          Expanded(
+            child: Text(value),
+          ),
+        ],
+      ),
     );
   }
 }

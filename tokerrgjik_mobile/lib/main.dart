@@ -13,6 +13,8 @@ import 'package:tokerrgjik_mobile/services/notification_service.dart';
 import 'package:tokerrgjik_mobile/services/auth_service.dart';
 import 'package:tokerrgjik_mobile/services/local_storage_service.dart';
 import 'package:tokerrgjik_mobile/services/language_service.dart';
+import 'package:tokerrgjik_mobile/services/translations.dart';
+import 'package:tokerrgjik_mobile/services/cryptolens_service.dart';
 import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
 import 'screens/settings_screen.dart';
@@ -72,6 +74,23 @@ void main() async {
     print('Local storage initialized successfully');
   } catch (e) {
     print('Local storage initialization error: $e');
+  }
+  
+  try {
+    // Initialize Translations (language support)
+    await Translations.loadLanguage();
+    print('Translations loaded: ${Translations.currentLanguage}');
+  } catch (e) {
+    print('Translations initialization error: $e');
+  }
+  
+  try {
+    // Initialize Cryptolens License Protection
+    await CryptolensService.initialize();
+    print('License protection initialized');
+    print('Licensed: ${CryptolensService.isLicensed}');
+  } catch (e) {
+    print('License initialization error: $e');
   }
   
   try {
