@@ -49,3 +49,8 @@ dependencies {
     // Core library desugaring for flutter_local_notifications
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.0.4")
 }
+
+// Suppress deprecation warnings from third-party dependencies
+tasks.withType<JavaCompile> {
+    options.compilerArgs.addAll(listOf("-Xlint:-deprecation", "-Xlint:-unchecked"))
+}

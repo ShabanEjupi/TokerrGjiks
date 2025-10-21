@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
+import '../services/api_service.dart';
+import '../services/auth_service.dart';
 
 class UserProfile extends ChangeNotifier {
   // Default constructor
@@ -128,8 +130,9 @@ class UserProfile extends ChangeNotifier {
     notifyListeners();
   }
   
-  // Save to storage
+  // Save to storage - DUAL SAVE: Local + Neon backup
   Future<void> saveProfile() async {
+    // 1. ALWAYS save to local storage (phone cache)
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('username', _username);
     await prefs.setInt('coins', _coins);
@@ -163,6 +166,34 @@ class UserProfile extends ChangeNotifier {
     
     await prefs.setString('friends', json.encode(_friends));
     await prefs.setString('friendRequests', json.encode(_friendRequests));
+    
+    // 2. ALSO save to Neon database (backup) - fire and forget
+    _syncToDatabase();
+  }
+  
+  // Background sync to Neon database (non-blocking)
+  void _syncToDatabase() async {
+    try {
+      final userId = AuthService.currentUserId;
+      if (userId == null) return;
+      
+      await ApiService.post('/users', {
+        'action': 'update_stats',
+        'userId': userId,
+        'username': _username,
+        'coins': _coins,
+        'wins': _totalWins,
+        'losses': _totalLosses,
+        'draws': _totalDraws,
+        'winStreak': _winStreak,
+        'bestStreak': _bestStreak,
+        'isPro': _isPro,
+      });
+      print('✅ Profile synced to Neon database');
+    } catch (e) {
+      print('⚠️ Database sync failed (offline?): $e');
+      // Don't block - local save already succeeded
+    }
   }
   
   // Check daily login

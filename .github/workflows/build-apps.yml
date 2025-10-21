@@ -139,7 +139,10 @@ jobs:
       
       - name: Build iOS (No Codesign)
         working-directory: tokerrgjik_mobile
-        run: flutter build ios --release --no-codesign
+        run: |
+          echo "ℹ️  Building iOS without codesigning (manual signing required for deployment)"
+          flutter build ios --release --no-codesign
+          echo "✅ iOS build complete - manual codesigning needed before App Store submission"
       
       - name: Create IPA
         working-directory: tokerrgjik_mobile

@@ -41,66 +41,56 @@ class AuthService {
   }
   
   /// Register new user
+  /// ALWAYS saves to BOTH local storage AND Neon database for backup
   static Future<Map<String, dynamic>?> register({
     required String username,
     required String password,
     String? email,
   }) async {
-    if (!kIsWeb) {
-      // Mobile: Create local user
-      _currentUserId = 'local_${DateTime.now().millisecondsSinceEpoch}';
-      _currentUsername = username;
-      await _saveAuthLocal();
-      return {
-        'userId': _currentUserId,
-        'username': username,
-        'success': true,
-      };
-    }
-    
-    // Web: use ApiService which routes to Netlify functions
+    // ALWAYS try to save to Neon database first (for backup)
+    Map<String, dynamic>? serverResult;
     try {
-      final result = await ApiService.post('/auth', {
+      serverResult = await ApiService.post('/auth', {
         'action': 'register',
         'username': username,
         'password': password,
         if (email != null) 'email': email,
       });
 
-      if (result != null) {
-        // Netlify auth returns user object
-        _currentUserId = result['user']?['id']?.toString() ?? result['userId']?.toString();
-        _authToken = result['token'] ?? result['token'];
+      if (serverResult != null) {
+        // Server registration successful - use server user ID
+        _currentUserId = serverResult['user']?['id']?.toString() ?? serverResult['userId']?.toString();
+        _authToken = serverResult['token'];
         _currentUsername = username;
         await _saveAuthLocal();
-        return { ...result, 'success': true };
+        print('✅ User registered in Neon database: $_currentUserId');
+        return { ...serverResult, 'success': true };
       }
     } catch (e) {
-      print('Register error: $e');
-      return await _createLocalUser(username);
+      print('⚠️ Neon registration failed, creating local-only user: $e');
     }
-    return null;
+    
+    // If server fails (mobile offline OR server down), create local user as fallback
+    _currentUserId = 'local_${DateTime.now().millisecondsSinceEpoch}';
+    _currentUsername = username;
+    await _saveAuthLocal();
+    print('📱 Local-only user created: $_currentUserId');
+    
+    return {
+      'userId': _currentUserId,
+      'username': username,
+      'success': true,
+      'offline': true,
+    };
   }
   
   /// Login user
+  /// ALWAYS tries Neon database first, falls back to local storage
   static Future<Map<String, dynamic>?> login({
     required String username,
     required String password,
   }) async {
-    if (!kIsWeb) {
-      // Mobile: Load local user
-      await _loadAuthLocal();
-      if (_currentUserId == null) {
-        // Create new local user
-        return await register(username: username, password: password);
-      }
-      return {
-        'userId': _currentUserId,
-        'username': _currentUsername ?? username,
-        'success': true,
-      };
-    }
-    
+    // ALWAYS try server login first (for backup sync)
     try {
       final result = await ApiService.post('/auth', {
         'action': 'login',
@@ -108,18 +98,32 @@ class AuthService {
         'password': password,
       });
 
-      if (result != null) {
+      if (result != null && result['success'] == true) {
         _currentUserId = result['user']?['id']?.toString() ?? result['userId']?.toString();
         _authToken = result['token'];
         _currentUsername = username;
         await _saveAuthLocal();
+        print('✅ Logged in via Neon database: $_currentUserId');
         return { ...result, 'success': true };
       }
     } catch (e) {
-      print('Login error: $e');
-      return await _createLocalUser(username);
+      print('⚠️ Neon login failed, trying local storage: $e');
     }
-    return null;
+    
+    // Fallback: Load local user
+    await _loadAuthLocal();
+    if (_currentUserId == null) {
+      // No local user exists, register new one
+      return await register(username: username, password: password);
+    }
+    
+    print('📱 Logged in with local storage: $_currentUserId');
+    return {
+      'userId': _currentUserId,
+      'username': _currentUsername ?? username,
+      'success': true,
+      'offline': true,
+    };
   }
   
   /// Guest login (no account needed)

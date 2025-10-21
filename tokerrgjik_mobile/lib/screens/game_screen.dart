@@ -24,6 +24,7 @@ class _GameScreenState extends State<GameScreen> {
   late GameModel game;
   int _player1Mills = 0; // Track mills formed by player 1
   int _coinsEarned = 0; // Track coins earned this game
+  int? _hintPosition; // Position to highlight with pulsing white effect
 
   @override
   void initState() {
@@ -32,6 +33,7 @@ class _GameScreenState extends State<GameScreen> {
     game.reset(); // Initialize history
     _player1Mills = 0;
     _coinsEarned = 0;
+    _hintPosition = null;
     
     // Set up bonus callback for shilevek rewards
     game.onBonusEarned = (int coins, String reason) {
@@ -54,6 +56,9 @@ class _GameScreenState extends State<GameScreen> {
     }
 
     setState(() {
+      // Clear hint when player makes a move
+      _hintPosition = null;
+      
       if (game.phase == 'placing') {
         bool millFormed = game.placePiece(posId);
         SoundService.playPlacePiece();
@@ -407,7 +412,28 @@ class _GameScreenState extends State<GameScreen> {
     else if (result == 'loss') profile.recordLoss();
     else profile.recordDraw();
 
-    // Try to send to server; if fails, save locally
+    final gameData = {
+      'username': username,
+      'game_mode': widget.mode ?? (game.aiEnabled ? 'vs_ai' : 'local'),
+      'result': result,
+      'opponent_username': opponent,
+      'played_at': DateTime.now().toIso8601String(),
+    };
+
+    // DUAL SAVE: Save to BOTH local storage AND Neon database
+    // This ensures backup even if one fails
+    
+    // 1. Save to local storage (phone cache) - ALWAYS
+    try {
+      final local = LocalStorageService();
+      await local.init();
+      await local.saveGameHistory(gameData);
+      print('✅ Game saved to local storage (phone cache)');
+    } catch (e) {
+      print('⚠️ Local save failed: $e');
+    }
+
+    // 2. Save to Neon database (backup) - ALWAYS TRY
     try {
       await ApiService.saveGameResult(
         username: username,
@@ -415,16 +441,10 @@ class _GameScreenState extends State<GameScreen> {
         result: result,
         opponentUsername: opponent,
       );
+      print('✅ Game saved to Neon database (backup)');
     } catch (e) {
-      final local = LocalStorageService();
-      await local.init();
-      await local.saveGameHistory({
-        'username': username,
-        'game_mode': widget.mode ?? (game.aiEnabled ? 'vs_ai' : 'local'),
-        'result': result,
-        'opponent_username': opponent,
-        'played_at': DateTime.now().toIso8601String(),
-      });
+      print('⚠️ Neon backup failed (offline?): $e');
+      // Don't fail - local save already succeeded
     }
   }
 
@@ -542,7 +562,22 @@ class _GameScreenState extends State<GameScreen> {
                   ),
                 ],
               ),
-              onPressed: () => HintsService.showHintDialog(context, game, game.currentPlayer),
+              onPressed: () async {
+                final hintPos = await HintsService.showHintDialog(context, game, game.currentPlayer);
+                if (hintPos != null) {
+                  setState(() {
+                    _hintPosition = hintPos;
+                  });
+                  // Clear hint after 5 seconds
+                  Future.delayed(const Duration(seconds: 5), () {
+                    if (mounted) {
+                      setState(() {
+                        _hintPosition = null;
+                      });
+                    }
+                  });
+                }
+              },
               tooltip: 'Blej Hint (${HintsService.HINT_COST} monedha)',
             ),
           IconButton(
@@ -617,30 +652,38 @@ class _GameScreenState extends State<GameScreen> {
 
               const SizedBox(height: 8),
 
-              // Game board - takes remaining space
-              Center(
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    // Use 90% of available width or height (whichever is smaller)
-                    final size = constraints.maxWidth < constraints.maxHeight
-                        ? constraints.maxWidth * 0.90
-                        : constraints.maxHeight * 0.90;
-                    
-                    return SizedBox(
-                      width: size,
-                      height: size,
-                      child: Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: GameBoard(
-                          game: game,
-                          onPositionTap: handlePositionTap,
-                          boardColor: profile.boardColor,
-                          player1Color: profile.player1Color,
-                          player2Color: profile.player2Color,
-                        ),
+              // Game board - perfectly centered with proper constraints
+              Expanded(
+                child: Center(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                    child: AspectRatio(
+                      aspectRatio: 1.0,
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          // Get the smaller dimension to ensure board fits
+                          final boardSize = constraints.maxWidth < constraints.maxHeight
+                              ? constraints.maxWidth
+                              : constraints.maxHeight;
+                          
+                          return Center(
+                            child: SizedBox(
+                              width: boardSize,
+                              height: boardSize,
+                              child: GameBoard(
+                                game: game,
+                                onPositionTap: handlePositionTap,
+                                boardColor: profile.boardColor,
+                                player1Color: profile.player1Color,
+                                player2Color: profile.player2Color,
+                                hintPosition: _hintPosition,
+                              ),
+                            ),
+                          );
+                        },
                       ),
-                    );
-                  },
+                    ),
+                  ),
                 ),
               ),
 

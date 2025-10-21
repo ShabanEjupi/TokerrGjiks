@@ -4,13 +4,20 @@ import '../models/user_profile.dart';
 import '../models/game_model.dart';
 import '../services/sound_service.dart';
 
+class HintData {
+  final String text;
+  final int? position;
+  
+  HintData(this.text, this.position);
+}
+
 /// Hints Service for TokerrGjik
 /// Provides strategic hints during gameplay for coins
 class HintsService {
   static const int HINT_COST = 10; // 10 coins per hint
   
   /// Get a strategic hint for the current game state
-  static String? getHint(GameModel game, int currentPlayer) {
+  static HintData? getHint(GameModel game, int currentPlayer) {
     // PLACING PHASE HINTS
     if (game.phase == 'placing') {
       // Check if we can complete a mill
@@ -23,7 +30,7 @@ class HintsService {
         game.board[pos] = currentPlayer;
         if (game.checkMill(pos)) {
           game.board[pos] = null;
-          return '💡 Vendose figurën në pozicionin ${_getPositionName(pos)} për të formuar një rreth!';
+          return HintData('💡 Vendose figurën në pozicionin ${_getPositionName(pos)} për të formuar një rreth!', pos);
         }
         game.board[pos] = null;
       }
@@ -34,7 +41,7 @@ class HintsService {
         game.board[pos] = opponent;
         if (game.checkMill(pos)) {
           game.board[pos] = null;
-          return '🛡️ Bllokoj kundërshtarin duke vendosur në pozicionin ${_getPositionName(pos)}!';
+          return HintData('🛡️ Bllokoj kundërshtarin duke vendosur në pozicionin ${_getPositionName(pos)}!', pos);
         }
         game.board[pos] = null;
       }
@@ -43,10 +50,10 @@ class HintsService {
       List<int> strategic = [1, 3, 5, 7, 9, 11, 13, 15]; // Center and middle positions
       List<int> availableStrategic = emptyPositions.where((pos) => strategic.contains(pos)).toList();
       if (availableStrategic.isNotEmpty) {
-        return '⭐ Pozicionet strategjike: ${_getPositionName(availableStrategic.first)} janë më të mira!';
+        return HintData('⭐ Pozicionet strategjike: ${_getPositionName(availableStrategic.first)} janë më të mira!', availableStrategic.first);
       }
       
-      return '💭 Vendos figurat në qendër për fleksibilitet maksimal!';
+      return HintData('💭 Vendos figurat në qendër për fleksibilitet maksimal!', null);
     }
     
     // MOVING PHASE HINTS
@@ -66,7 +73,7 @@ class HintsService {
           if (game.checkMill(to)) {
             game.board[from] = temp;
             game.board[to] = null;
-            return '🎯 Lëviz figurën nga ${_getPositionName(from)} në ${_getPositionName(to)} për të formuar rreth!';
+            return HintData('🎯 Lëviz figurën nga ${_getPositionName(from)} në ${_getPositionName(to)} për të formuar rreth!', to);
           }
           game.board[from] = temp;
           game.board[to] = null;
@@ -81,13 +88,13 @@ class HintsService {
           game.board[to] = opponent;
           if (game.checkMill(to)) {
             game.board[to] = null;
-            return '🛡️ Bllokoj lëvizjen e kundërshtarit duke lëvizur në ${_getPositionName(to)}!';
+            return HintData('🛡️ Bllokoj lëvizjen e kundërshtarit duke lëvizur në ${_getPositionName(to)}!', to);
           }
           game.board[to] = null;
         }
       }
       
-      return '🤔 Kërko të formosh rrathë duke lëvizur figurat në pozicione strategjike!';
+      return HintData('🤔 Kërko të formosh rrathë duke lëvizur figurat në pozicione strategjike!', null);
     }
     
     // REMOVING PHASE HINTS
@@ -95,7 +102,7 @@ class HintsService {
       List<int> removable = game.getRemovablePieces();
       
       if (removable.isEmpty) {
-        return '⚠️ Të gjitha figurat e kundërshtarit janë në rrathë. Mund të heqësh çdo figurë!';
+        return HintData('⚠️ Të gjitha figurat e kundërshtarit janë në rrathë. Mund të heqësh çdo figurë!', null);
       }
       
       // Prioritize removing pieces that are close to forming mills
@@ -111,36 +118,36 @@ class HintsService {
               if (game.board[p] == null) emptyCount++;
             }
             if (opponentCount == 2 && emptyCount == 1) {
-              return '⭐ Hiq figurën nga ${_getPositionName(pos)} për të shkatërruar një rreth të mundshëm!';
+              return HintData('⭐ Hiq figurën nga ${_getPositionName(pos)} për të shkatërruar një rreth të mundshëm!', pos);
             }
           }
         }
       }
       
-      return '💡 Hiq figurën e kundërshtarit nga një pozicion strategjik!';
+      return HintData('💡 Hiq figurën e kundërshtarit nga një pozicion strategjik!', null);
     }
     
     return null;
   }
   
-  /// Show hint dialog
-  static void showHintDialog(BuildContext context, GameModel game, int currentPlayer) {
+  /// Show hint dialog and return the hint position for visual highlighting
+  static Future<int?> showHintDialog(BuildContext context, GameModel game, int currentPlayer) async {
     final profile = Provider.of<UserProfile>(context, listen: false);
     
     if (profile.coins < HINT_COST) {
       _showInsufficientCoinsDialog(context);
-      return;
+      return null;
     }
     
-    final hint = getHint(game, currentPlayer);
-    if (hint == null) {
+    final hintData = getHint(game, currentPlayer);
+    if (hintData == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Asnjë hint i disponueshëm për këtë situatë!')),
       );
-      return;
+      return null;
     }
     
-    showDialog(
+    return await showDialog<int>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Row(
@@ -155,7 +162,7 @@ class HintsService {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              hint,
+              hintData.text,
               style: const TextStyle(fontSize: 16),
             ),
             const SizedBox(height: 16),
@@ -182,14 +189,14 @@ class HintsService {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(context, null),
             child: const Text('Anulo'),
           ),
           ElevatedButton(
             onPressed: () {
               if (profile.spendCoins(HINT_COST)) {
                 SoundService.playCoin();
-                Navigator.pop(context);
+                Navigator.pop(context, hintData.position);
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
                     content: Text('✨ Hint i blerë!'),

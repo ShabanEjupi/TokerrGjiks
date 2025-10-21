@@ -8,6 +8,7 @@ class GameBoard extends StatelessWidget {
   final Color? boardColor;
   final Color? player1Color;
   final Color? player2Color;
+  final int? hintPosition; // Position to highlight with white pulsing effect
 
   const GameBoard({
     super.key,
@@ -16,6 +17,7 @@ class GameBoard extends StatelessWidget {
     this.boardColor,
     this.player1Color,
     this.player2Color,
+    this.hintPosition,
   });
 
   @override
@@ -110,6 +112,7 @@ class GameBoard extends StatelessWidget {
         game.getValidMoves(game.selectedPosition!).contains(pos.id);
     bool isRemovable =
         game.phase == 'removing' && game.getRemovablePieces().contains(pos.id);
+    bool isHint = hintPosition == pos.id; // Check if this is the hint position
 
     // Larger touch target for mobile
     double touchSize = 60.0;
@@ -124,78 +127,148 @@ class GameBoard extends StatelessWidget {
           width: touchSize,
           height: touchSize,
           alignment: Alignment.center,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            width: pieceSize,
-            height: pieceSize,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-                color: piece != null
-                  ? (piece == 1 
-                      ? (player1Color ?? const Color(0xFFFFF8DC)) // Cream color - visible on all themes
-                      : (player2Color ?? Colors.black87))
-                  : (isValidMove ? Colors.blue.withOpacity(0.3) : Colors.grey.shade300),
-              border: Border.all(
-                color: isSelected
-                    ? Colors.orange
-                    : isRemovable
-                        ? Colors.red
-                        : isValidMove
-                            ? Colors.blue
-                            : (piece != null 
-                                ? (piece == 1 
-                                    ? Colors.black.withOpacity(0.9)  // Dark border for white pieces
-                                    : Colors.white.withOpacity(0.9)) // White border for black pieces
-                                : Colors.black54),
-                width: piece != null 
-                    ? (isSelected || isRemovable ? 5.0 : 4.5)  // Thicker border for better visibility
-                    : (isSelected || isRemovable ? 4 : 2),
-              ),
-              boxShadow: piece != null || isValidMove
-                  ? [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.4),
-                        blurRadius: 12,
-                        offset: const Offset(0, 6),
-                      ),
-                      // 3D highlight effect
-                      BoxShadow(
-                        color: Colors.white.withOpacity(0.3),
-                        blurRadius: 4,
-                        offset: const Offset(-2, -2),
-                      ),
-                    ]
-                  : null,
-              gradient: piece != null 
-                  ? RadialGradient(
-                      center: const Alignment(-0.3, -0.3),
-                      colors: [
-                        // Bright highlight for 3D effect
-                        piece == 1 
-                            ? (player1Color ?? Colors.white).withOpacity(1.0)
-                            : (player2Color ?? Colors.black87).withOpacity(1.0),
-                        piece == 1 
-                            ? (player1Color ?? Colors.white)
-                            : (player2Color?.withOpacity(0.95) ?? Colors.black87),
-                        // Darker edge for depth
-                        piece == 1 
-                            ? (player1Color?.withOpacity(0.75) ?? Colors.grey.shade300)
-                            : (player2Color?.withOpacity(0.7) ?? Colors.black54),
-                      ],
-                      stops: const [0.0, 0.4, 1.0],
-                    )
-                  : null,
-            ),
-            child: isRemovable
-                ? const Icon(
-                    Icons.close,
-                    color: Colors.red,
-                    size: 24,
-                  )
-                : null,
-          ),
+          child: isHint
+              ? _PulsingHintIndicator(
+                  child: _buildPositionCircle(piece, pieceSize, isSelected, isValidMove, isRemovable),
+                )
+              : _buildPositionCircle(piece, pieceSize, isSelected, isValidMove, isRemovable),
         ),
       ),
+    );
+  }
+
+  Widget _buildPositionCircle(int? piece, double pieceSize, bool isSelected, bool isValidMove, bool isRemovable) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      width: pieceSize,
+      height: pieceSize,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: piece != null
+          ? (piece == 1 
+              ? (player1Color ?? const Color(0xFFFFF8DC)) // Cream color - visible on all themes
+              : (player2Color ?? Colors.black87))
+          : (isValidMove ? Colors.blue.withOpacity(0.3) : Colors.grey.shade300),
+        border: Border.all(
+          color: isSelected
+              ? Colors.orange
+              : isRemovable
+                  ? Colors.red
+                  : isValidMove
+                      ? Colors.blue
+                      : (piece != null 
+                          ? (piece == 1 
+                              ? Colors.black.withOpacity(0.9)  // Dark border for white pieces
+                              : Colors.white.withOpacity(0.9)) // White border for black pieces
+                          : Colors.black54),
+          width: piece != null 
+              ? (isSelected || isRemovable ? 5.0 : 4.5)  // Thicker border for better visibility
+              : (isSelected || isRemovable ? 4 : 2),
+        ),
+        boxShadow: piece != null || isValidMove
+            ? [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.4),
+                  blurRadius: 12,
+                  offset: const Offset(0, 6),
+                ),
+                // 3D highlight effect
+                BoxShadow(
+                  color: Colors.white.withOpacity(0.3),
+                  blurRadius: 4,
+                  offset: const Offset(-2, -2),
+                ),
+              ]
+            : null,
+        gradient: piece != null 
+            ? RadialGradient(
+                center: const Alignment(-0.3, -0.3),
+                colors: [
+                  // Bright highlight for 3D effect
+                  piece == 1 
+                      ? (player1Color ?? Colors.white).withOpacity(1.0)
+                      : (player2Color ?? Colors.black87).withOpacity(1.0),
+                  piece == 1 
+                      ? (player1Color ?? Colors.white)
+                      : (player2Color?.withOpacity(0.95) ?? Colors.black87),
+                  // Darker edge for depth
+                  piece == 1 
+                      ? (player1Color?.withOpacity(0.75) ?? Colors.grey.shade300)
+                      : (player2Color?.withOpacity(0.7) ?? Colors.black54),
+                ],
+                stops: const [0.0, 0.4, 1.0],
+              )
+            : null,
+      ),
+      child: isRemovable
+          ? const Icon(
+              Icons.close,
+              color: Colors.red,
+              size: 24,
+            )
+          : null,
+    );
+  }
+}
+
+// Pulsing white glow animation for hint indicator
+class _PulsingHintIndicator extends StatefulWidget {
+  final Widget child;
+  
+  const _PulsingHintIndicator({required this.child});
+  
+  @override
+  _PulsingHintIndicatorState createState() => _PulsingHintIndicatorState();
+}
+
+class _PulsingHintIndicatorState extends State<_PulsingHintIndicator>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+  
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 1000),
+      vsync: this,
+    )..repeat(reverse: true);
+    
+    _animation = Tween<double>(begin: 0.3, end: 1.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+  
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+  
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _animation,
+      builder: (context, child) {
+        return Container(
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.white.withOpacity(_animation.value * 0.8),
+                blurRadius: 20 * _animation.value,
+                spreadRadius: 5 * _animation.value,
+              ),
+              BoxShadow(
+                color: Colors.amber.withOpacity(_animation.value * 0.5),
+                blurRadius: 30 * _animation.value,
+                spreadRadius: 8 * _animation.value,
+              ),
+            ],
+          ),
+          child: widget.child,
+        );
+      },
     );
   }
 }
