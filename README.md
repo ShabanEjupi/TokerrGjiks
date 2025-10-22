@@ -37,7 +37,7 @@ flutter build ios --release --no-codesign
 6. Shto `NEON_DATABASE_URL=your_connection_string`
 7. Trigger deploy
 
-## �� PayPal (Sandbox Mode)
+## PayPal (Sandbox mode)
 
 PayPal është në sandbox mode për testing.
 
